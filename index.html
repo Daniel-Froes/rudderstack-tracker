@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RudderStack Event Tracker Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .card { transition: all 0.2s ease-in-out; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px_12px rgba(0,0,0,0.1); }
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+        }
+        .modal-backdrop.visible { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background-color: white; padding: 2rem; border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 95%; width: 550px;
+            transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        .modal-backdrop.visible .modal-content { transform: scale(1); }
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 9999px;
+            background-color: #2d3748;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, -10px);
+        }
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        .hidden { display: none; }
+        .view-toggle-btn.active, .view-toggle-btn.active:hover {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Main App Container -->
+    <div id="app-container" class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-screen-2xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-600">RudderStack Event Tracker</h1>
+            <p class="text-gray-600 mt-2">Uma forma inteligente de gerenciar seus eventos.</p>
+            <div class="mt-6 flex justify-center items-center gap-4">
+                <div class="inline-block bg-white border border-gray-200 rounded-full px-4 py-2 text-sm font-semibold text-gray-700">
+                    <span class="font-bold">ID da Planilha:</span> <span id="appIdDisplay">carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Controls Toolbar -->
+        <div class="mb-8 p-4 bg-white rounded-xl shadow-md space-y-6">
+             <!-- Data Management Section -->
+            <div class="p-3 bg-gray-50 rounded-lg border">
+                <h3 class="text-lg font-semibold mb-2">Gerenciamento de Dados</h3>
+                <p class="text-sm text-gray-600 mb-4">Use estes botões para salvar seus eventos em um arquivo ou carregar eventos de um arquivo para colaborar com sua equipe.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 items-end gap-4">
+                    <div>
+                        <label for="uploadOwnerInput" class="block text-sm font-medium text-gray-700 mb-1">Atribuir ao Responsável</label>
+                        <input type="text" id="uploadOwnerInput" placeholder="Nome (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <label for="uploadInput" class="w-full bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        Upload (JSON)
+                    </label>
+                    <input type="file" id="uploadInput" class="hidden" accept=".json">
+                     <button id="downloadJsonBtn" class="w-full bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        Download (JSON)
+                    </button>
+                </div>
+            </div>
+            <!-- Search and Filter Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div class="lg:col-span-2">
+                    <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">Buscar Evento</label>
+                    <div class="relative"><input type="text" id="searchInput" placeholder="Buscar por nome..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i></div>
+                </div>
+                <div>
+                     <label for="filterOwner" class="block text-sm font-medium text-gray-700 mb-1">Responsável</label>
+                     <select id="filterOwner" class="form-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"></select>
+                </div>
+                <div>
+                     <label for="filterSection" class="block text-sm font-medium text-gray-700 mb-1">Seção</label>
+                     <select id="filterSection" class="form-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"></select>
+                </div>
+            </div>
+             <button id="openAddModalBtn" class="w-full bg-blue-600 text-white font-semibold px-4 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i>Adicionar Novo Evento</button>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="mb-6 flex justify-center">
+            <div class="inline-flex rounded-lg shadow-sm">
+                <button id="kanbanViewBtn" class="view-toggle-btn active px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-blue-500">Visualização Kanban</button>
+                <button id="mapViewBtn" class="view-toggle-btn px-4 py-2 text-sm font-semibold text-gray-700 bg-white border-t border-b border-r border-gray-300 rounded-r-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-blue-500">Mapa de Eventos</button>
+            </div>
+        </div>
+
+        <!-- Progress and Sort -->
+        <div id="kanban-controls" class="mb-6 max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="w-full sm:w-2/3">
+                <div class="flex justify-between mb-1"><span class="text-base font-medium text-blue-700">Progresso</span><span id="progressLabel" class="text-sm font-medium text-blue-700">Calculando...</span></div>
+                <div class="w-full bg-gray-200 rounded-full h-4"><div id="progressBar" class="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div></div>
+            </div>
+            <div class="w-full sm:w-auto">
+                <label for="sortSelect" class="sr-only">Ordenar</label>
+                <select id="sortSelect" class="form-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <option value="createdAt">Ordenar por Data</option>
+                    <option value="priority">Ordenar por Prioridade</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Event Lists (Kanban View) -->
+        <div id="kanban-view" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div>
+                <h2 class="text-2xl font-bold mb-4 text-center text-red-600 flex items-center justify-center gap-2"><i data-lucide="list" class="inline-block"></i>A Fazer</h2>
+                <div id="todo-list" class="bg-gray-200/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold mb-4 text-center text-yellow-600 flex items-center justify-center gap-2"><i data-lucide="loader-2" class="inline-block"></i>Em Progresso</h2>
+                <div id="inprogress-list" class="bg-gray-200/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold mb-4 text-center text-green-600 flex items-center justify-center gap-2"><i data-lucide="check-circle-2" class="inline-block"></i>Feito</h2>
+                <div id="done-list" class="bg-gray-200/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- Event Map View -->
+        <div id="event-map-view" class="hidden bg-white p-6 rounded-xl shadow-md space-y-6">
+            <!-- Content will be generated by JS -->
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="eventModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div id="parser-view" class="hidden space-y-4">
+                 <h3 class="text-lg font-semibold">Preencher com Código</h3>
+                 <p class="text-sm text-gray-600">Cole seu código `rudderanalytics.track(...)` abaixo para preencher o formulário automaticamente.</p>
+                 <textarea id="codeInput" class="w-full h-40 p-2 border rounded-md font-mono text-sm" placeholder='rudderanalytics.track("Event Name", { key: "value" });'></textarea>
+                 <div class="flex justify-end gap-2">
+                    <button type="button" id="backToFormBtn" class="bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-lg hover:bg-gray-300">Voltar</button>
+                    <button type="button" id="parseCodeBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700">Analisar</button>
+                 </div>
+            </div>
+            <form id="eventForm">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="modalTitle" class="text-2xl font-bold">Adicionar Novo Evento</h2>
+                    <button type="button" id="openParserBtn" title="Preencher com Código" class="text-blue-600 hover:text-blue-800 flex items-center gap-2 font-semibold">
+                        <i data-lucide="wand-2" class="w-5 h-5"></i>
+                        <span>Preencher com Código</span>
+                    </button>
+                </div>
+                <input type="hidden" id="eventId">
+                <div class="space-y-4">
+                    <input type="text" id="eventNameInput" placeholder="Nome do Evento" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" id="eventOwnerInput" placeholder="Responsável" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="eventSectionInput" placeholder="Seção do Site" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <select id="eventPrioritySelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="Baixa">Prioridade: Baixa</option>
+                        <option value="Média">Prioridade: Média</option>
+                        <option value="Alta">Prioridade: Alta</option>
+                    </select>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Dados do Evento (Payload)</label>
+                        <div class="max-h-48 overflow-y-auto p-2 border rounded-lg bg-gray-50">
+                            <div id="payload-list" class="space-y-2"></div>
+                        </div>
+                        <button type="button" id="addPayloadBtn" class="mt-2 text-sm text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>Adicionar Propriedade
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end gap-4">
+                    <button type="button" id="cancelBtn" class="bg-gray-200 text-gray-800 font-semibold px-6 py-2 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" id="saveBtn" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-backdrop">
+        <div class="modal-content text-center">
+             <i data-lucide="alert-triangle" class="mx-auto w-12 h-12 text-red-500 mb-4"></i>
+             <h2 class="text-xl font-bold mb-2">Confirmar Exclusão</h2>
+             <p id="deleteModalText" class="text-gray-600 mb-6">Você tem certeza?</p>
+             <div class="flex justify-center gap-4">
+                <button id="cancelDeleteBtn" class="bg-gray-200 text-gray-800 font-semibold px-6 py-2 rounded-lg hover:bg-gray-300">Cancelar</button>
+                <button id="confirmDeleteBtn" class="bg-red-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-red-700">Excluir</button>
+             </div>
+        </div>
+    </div>
+
+    <!-- Name Prompt Modal -->
+    <div id="namePromptModal" class="modal-backdrop">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Qual é o seu nome?</h2>
+            <p class="text-gray-600 mb-6">Seu nome será exibido nos comentários que você adicionar.</p>
+            <input type="text" id="commenterNameInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Seu nome">
+            <div class="mt-6 flex justify-end">
+                <button id="saveNameBtn" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Modal -->
+    <div id="bulkEditModal" class="modal-backdrop">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-6">Edição em Massa</h2>
+            <form id="bulkEditForm" class="space-y-4">
+                <div>
+                    <label for="bulkOwnerInput" class="block text-sm font-medium text-gray-700">Responsável</label>
+                    <input type="text" id="bulkOwnerInput" placeholder="Manter original" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="bulkSectionInput" class="block text-sm font-medium text-gray-700">Seção do Site</label>
+                    <input type="text" id="bulkSectionInput" placeholder="Manter original" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="bulkPrioritySelect" class="block text-sm font-medium text-gray-700">Prioridade</label>
+                    <select id="bulkPrioritySelect" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="">Manter original</option>
+                        <option value="Baixa">Baixa</option>
+                        <option value="Média">Média</option>
+                        <option value="Alta">Alta</option>
+                    </select>
+                </div>
+                 <div>
+                    <label for="bulkStatusSelect" class="block text-sm font-medium text-gray-700">Status</label>
+                    <select id="bulkStatusSelect" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="">Manter original</option>
+                        <option value="todo">A Fazer</option>
+                        <option value="inprogress">Em Progresso</option>
+                        <option value="done">Feito</option>
+                    </select>
+                </div>
+                <div class="mt-8 flex justify-end gap-4">
+                    <button type="button" id="cancelBulkEditBtn" class="bg-gray-200 text-gray-800 font-semibold px-6 py-2 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700">Aplicar Mudanças</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="toast-notification" class="toast"></div>
+
+    <!-- Bulk Actions Bar -->
+    <div id="bulk-actions-bar" class="hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-xl bg-white p-3 rounded-t-lg shadow-2xl flex items-center justify-between gap-4 transition-transform duration-300 transform translate-y-full">
+        <span id="bulk-selected-count" class="font-semibold text-gray-700"></span>
+        <button id="openBulkEditBtn" class="bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+            <i data-lucide="edit" class="w-4 h-4"></i>
+            Editar Selecionados
+        </button>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, setLogLevel, getDocs, writeBatch, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Setup ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO", authDomain: "DEMO", projectId: "DEMO" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        setLogLevel('debug');
+
+        // --- DOM Elements ---
+        const appIdDisplay = document.getElementById('appIdDisplay');
+        const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+        const uploadInput = document.getElementById('uploadInput');
+        const uploadOwnerInput = document.getElementById('uploadOwnerInput');
+        const todoList = document.getElementById('todo-list');
+        const inprogressList = document.getElementById('inprogress-list');
+        const doneList = document.getElementById('done-list');
+        const progressBar = document.getElementById('progressBar');
+        const progressLabel = document.getElementById('progressLabel');
+        const searchInput = document.getElementById('searchInput');
+        const filterOwner = document.getElementById('filterOwner');
+        const filterSection = document.getElementById('filterSection');
+        const sortSelect = document.getElementById('sortSelect');
+        const openAddModalBtn = document.getElementById('openAddModalBtn');
+        const eventModal = document.getElementById('eventModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const eventForm = document.getElementById('eventForm');
+        const eventIdInput = document.getElementById('eventId');
+        const eventNameInput = document.getElementById('eventNameInput');
+        const eventOwnerInput = document.getElementById('eventOwnerInput');
+        const eventSectionInput = document.getElementById('eventSectionInput');
+        const payloadList = document.getElementById('payload-list');
+        const addPayloadBtn = document.getElementById('addPayloadBtn');
+        const eventPrioritySelect = document.getElementById('eventPrioritySelect');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const deleteModal = document.getElementById('deleteModal');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const deleteModalText = document.getElementById('deleteModalText');
+        const toast = document.getElementById('toast-notification');
+        // Parser elements
+        const parserView = document.getElementById('parser-view');
+        const openParserBtn = document.getElementById('openParserBtn');
+        const backToFormBtn = document.getElementById('backToFormBtn');
+        const parseCodeBtn = document.getElementById('parseCodeBtn');
+        const codeInput = document.getElementById('codeInput');
+        // Name Prompt Modal
+        const namePromptModal = document.getElementById('namePromptModal');
+        const commenterNameInput = document.getElementById('commenterNameInput');
+        const saveNameBtn = document.getElementById('saveNameBtn');
+        // View Toggle
+        const kanbanViewBtn = document.getElementById('kanbanViewBtn');
+        const mapViewBtn = document.getElementById('mapViewBtn');
+        const kanbanView = document.getElementById('kanban-view');
+        const eventMapView = document.getElementById('event-map-view');
+        const kanbanControls = document.getElementById('kanban-controls');
+        // Bulk Edit
+        const bulkActionsBar = document.getElementById('bulk-actions-bar');
+        const bulkSelectedCount = document.getElementById('bulk-selected-count');
+        const openBulkEditBtn = document.getElementById('openBulkEditBtn');
+        const bulkEditModal = document.getElementById('bulkEditModal');
+        const bulkEditForm = document.getElementById('bulkEditForm');
+        const cancelBulkEditBtn = document.getElementById('cancelBulkEditBtn');
+
+        // --- App State ---
+        let currentAppId = null;
+        let userId = null;
+        let eventsCollectionRef;
+        let allEvents = [];
+        let unsubscribe;
+        let selectedEvents = new Set();
+
+        // --- App Initialization ---
+        const handleAppLoad = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            let sheetId = urlParams.get('sheetId');
+
+            if (!sheetId) {
+                sheetId = typeof __app_id !== 'undefined' ? __app_id : `rudder-sheet-${Date.now()}`;
+            }
+            
+            initializeAppForId(sheetId);
+        };
+
+        const initializeAppForId = (appId) => {
+            currentAppId = appId;
+            appIdDisplay.textContent = currentAppId;
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    eventsCollectionRef = collection(db, 'artifacts', currentAppId, 'public', 'data', 'events');
+                    if (unsubscribe) unsubscribe();
+                    listenForEvents();
+                } else {
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Authentication Error:", error);
+                        appIdDisplay.textContent = "Erro de autenticação";
+                    }
+                }
+            });
+        };
+        
+        // --- Data Fetching & Rendering ---
+        const listenForEvents = () => {
+            if (!eventsCollectionRef) return;
+            unsubscribe = onSnapshot(eventsCollectionRef, (snapshot) => {
+                allEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderEvents();
+                renderEventMap();
+            });
+        };
+
+        const renderEvents = () => {
+            updateDynamicFilters();
+            todoList.innerHTML = '';
+            inprogressList.innerHTML = '';
+            doneList.innerHTML = '';
+            let filteredEvents = allEvents.filter(event => {
+                const searchMatch = event.name.toLowerCase().includes(searchInput.value.toLowerCase());
+                const ownerMatch = filterOwner.value === 'all' || event.owner === filterOwner.value;
+                const sectionMatch = filterSection.value === 'all' || event.section === filterSection.value;
+                return searchMatch && ownerMatch && sectionMatch;
+            });
+            
+            const priorityOrder = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
+            if (sortSelect.value === 'priority') {
+                filteredEvents.sort((a, b) => (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0));
+            } else { // createdAt (default)
+                filteredEvents.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+            }
+            
+            if (filteredEvents.length === 0 && allEvents.length > 0) {
+                 const emptyMessage = `<p class="text-gray-500 text-center p-4">Nenhum evento corresponde aos filtros atuais.</p>`;
+                 todoList.innerHTML = emptyMessage;
+                 inprogressList.innerHTML = emptyMessage;
+                 doneList.innerHTML = emptyMessage;
+            } else if (allEvents.length === 0) {
+                 todoList.innerHTML = `<p class="text-gray-500 text-center p-4">Nenhum evento a fazer. Adicione um!</p>`;
+                 inprogressList.innerHTML = `<p class="text-gray-500 text-center p-4">Nenhum evento em progresso.</p>`;
+                 doneList.innerHTML = `<p class="text-gray-500 text-center p-4">Nenhum evento concluído.</p>`;
+            }
+
+            filteredEvents.forEach(event => {
+                const eventCard = createEventCard(event);
+                if (event.status === 'inprogress') {
+                    inprogressList.appendChild(eventCard);
+                } else if (event.status === 'done') {
+                    doneList.appendChild(eventCard);
+                } else { // 'todo' or undefined
+                    todoList.appendChild(eventCard);
+                }
+            });
+            updateProgress(allEvents.length, allEvents.filter(e => e.status === 'done').length);
+            lucide.createIcons();
+        };
+
+        const renderEventMap = () => {
+            eventMapView.innerHTML = '';
+            const eventsBySection = allEvents.reduce((acc, event) => {
+                const section = event.section || 'Não Categorizado';
+                if (!acc[section]) {
+                    acc[section] = [];
+                }
+                acc[section].push(event);
+                return acc;
+            }, {});
+
+            if (Object.keys(eventsBySection).length === 0) {
+                eventMapView.innerHTML = `<p class="text-gray-500 text-center p-4">Nenhum evento para exibir no mapa. Adicione um evento com uma seção.</p>`;
+                return;
+            }
+
+            for (const section in eventsBySection) {
+                const sectionEvents = eventsBySection[section];
+                const todoCount = sectionEvents.filter(e => e.status === 'todo' || !e.status).length;
+                const inprogressCount = sectionEvents.filter(e => e.status === 'inprogress').length;
+                const doneCount = sectionEvents.filter(e => e.status === 'done').length;
+
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'border-b pb-4';
+                sectionDiv.innerHTML = `
+                    <h3 class="text-xl font-bold text-gray-800">${section}</h3>
+                    <div class="flex items-center gap-4 text-sm text-gray-600 mt-1 mb-3">
+                        <span>Total: <span class="font-semibold">${sectionEvents.length}</span></span>
+                        <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-red-500"></div>A Fazer: <span class="font-semibold">${todoCount}</span></span>
+                        <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-yellow-500"></div>Em Progresso: <span class="font-semibold">${inprogressCount}</span></span>
+                        <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-green-500"></div>Feito: <span class="font-semibold">${doneCount}</span></span>
+                    </div>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        ${sectionEvents.map(event => {
+                            const statusColors = { todo: 'bg-red-200', inprogress: 'bg-yellow-200', done: 'bg-green-200' };
+                            const statusColor = statusColors[event.status] || 'bg-red-200';
+                            return `<li class="map-event-item cursor-pointer hover:bg-gray-200 flex items-center gap-2 p-2 bg-gray-100 rounded-md" data-event-id="${event.id}">
+                                <div class="w-2 h-2 rounded-full ${statusColor} flex-shrink-0"></div>
+                                <span class="text-sm text-gray-800">${event.name}</span>
+                            </li>`;
+                        }).join('')}
+                    </ul>
+                `;
+                eventMapView.appendChild(sectionDiv);
+            }
+        };
+
+        const createEventCard = (event) => {
+            const card = document.createElement('div');
+            card.className = 'card relative bg-white p-4 rounded-lg shadow-sm space-y-3 border-l-4'; // Added relative positioning
+            
+            const priorityStyles = {
+                'Alta':  { badge: 'bg-red-100 text-red-800', border: 'border-l-red-500' },
+                'Média': { badge: 'bg-yellow-100 text-yellow-800', border: 'border-l-yellow-500' },
+                'Baixa': { badge: 'bg-gray-200 text-gray-800', border: 'border-l-gray-400' }
+            };
+            const style = priorityStyles[event.priority] || priorityStyles['Baixa'];
+            card.classList.add(style.border);
+            
+            let actionButtons = '';
+            switch(event.status) {
+                case 'inprogress':
+                    actionButtons = `
+                        <button title="Mover para A Fazer" class="action-btn text-gray-500 hover:text-red-600" data-action="todo"><i data-lucide="undo-2" class="w-5 h-5"></i></button>
+                        <button title="Concluir" class="action-btn text-gray-500 hover:text-green-600" data-action="done"><i data-lucide="check-circle-2" class="w-5 h-5"></i></button>
+                    `;
+                    break;
+                case 'done':
+                    actionButtons = `<button title="Mover para Em Progresso" class="action-btn text-gray-500 hover:text-yellow-600" data-action="inprogress"><i data-lucide="loader-2" class="w-5 h-5"></i></button>`;
+                    break;
+                case 'todo':
+                default:
+                    actionButtons = `<button title="Iniciar Progresso" class="action-btn text-gray-500 hover:text-yellow-600" data-action="inprogress"><i data-lucide="arrow-right-circle" class="w-5 h-5"></i></button>`;
+                    break;
+            }
+            
+            const payloadHtml = Array.isArray(event.payload) && event.payload.length > 0
+                ? `<details class="pt-2">
+                    <summary class="cursor-pointer text-sm font-semibold text-gray-700 hover:text-blue-600 flex items-center gap-1">
+                        <i data-lucide="database" class="w-4 h-4"></i> Dados do Evento
+                    </summary>
+                    <div class="mt-2 p-2 bg-gray-100 rounded-md text-xs text-gray-800">
+                        <ul class="space-y-1">
+                            ${event.payload.map(p => `<li><span class="font-semibold">${p.name || 'N/A'}:</span> <span class="text-gray-600">${p.type || 'N/A'}</span></li>`).join('')}
+                        </ul>
+                    </div>
+                </details>`
+                : '';
+
+            const commentsCount = Array.isArray(event.comments) ? event.comments.length : 0;
+            const commentsHtml = `
+                <details class="pt-2">
+                    <summary class="cursor-pointer text-sm font-semibold text-gray-700 hover:text-blue-600 flex items-center gap-1">
+                        <i data-lucide="message-square" class="w-4 h-4"></i> Comentários (${commentsCount})
+                    </summary>
+                    <div class="mt-2 p-2 bg-gray-100 rounded-md text-xs text-gray-800">
+                        <div class="comment-list space-y-2 max-h-40 overflow-y-auto mb-2">
+                            ${commentsCount > 0 ? event.comments.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt)).map(c => {
+                                const commentDate = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+                                const formattedDate = !isNaN(commentDate) ? commentDate.toLocaleString('pt-BR') : 'Data inválida';
+                                return `
+                                <div class="comment-item p-2 bg-white rounded">
+                                    <div class="flex justify-between items-start">
+                                        <p class="font-semibold">${c.author || 'Anônimo'}</p>
+                                        <div class="flex gap-2">
+                                            <button class="edit-comment-btn text-gray-400 hover:text-blue-600" data-timestamp="${commentDate.toISOString()}"><i data-lucide="edit-3" class="w-3 h-3"></i></button>
+                                            <button class="delete-comment-btn text-gray-400 hover:text-red-600" data-timestamp="${commentDate.toISOString()}"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                                        </div>
+                                    </div>
+                                    <p class="comment-text text-gray-600">${c.text}</p>
+                                    <p class="text-gray-400 text-right text-[10px]">${formattedDate}</p>
+                                </div>
+                            `}).join('') : '<p class="text-center text-gray-500 p-2">Nenhum comentário ainda.</p>'}
+                        </div>
+                        <div class="flex gap-2 items-center pt-2 border-t">
+                            <input type="text" class="new-comment-input w-full px-2 py-1 border border-gray-300 rounded-md text-xs" placeholder="Adicionar comentário...">
+                            <button class="add-comment-btn bg-blue-500 text-white rounded-md p-1 hover:bg-blue-600"><i data-lucide="send" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                </details>
+            `;
+
+            card.innerHTML = `
+                <input type="checkbox" class="bulk-select-checkbox absolute top-2 left-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-event-id="${event.id}">
+                <div class="pl-6"> <!-- Added padding to not overlap checkbox -->
+                    <div class="flex justify-between items-start">
+                        <p class="font-bold text-lg text-gray-900 pr-2">${event.name}</p>
+                        <span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${style.badge} flex-shrink-0">${event.priority}</span>
+                    </div>
+                    <div class="text-sm text-gray-600 space-y-1.5">
+                        <p><i data-lucide="user-circle" class="inline-block w-4 h-4 mr-2 text-gray-500"></i><span class="font-medium">${event.owner || 'N/A'}</span></p>
+                        <p><i data-lucide="layout-template" class="inline-block w-4 h-4 mr-2 text-gray-500"></i><span class="font-medium">${event.section || 'N/A'}</span></p>
+                    </div>
+                    ${payloadHtml}
+                    ${commentsHtml}
+                    <div class="flex items-center justify-end gap-3 pt-2 border-t border-gray-200 mt-3">
+                        <button title="Editar" class="edit-btn text-gray-500 hover:text-blue-600 transition-colors"><i data-lucide="edit-3" class="w-5 h-5"></i></button>
+                        ${actionButtons}
+                        <button title="Excluir" class="delete-btn text-gray-500 hover:text-red-600 transition-colors"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    </div>
+                </div>`;
+            
+            card.querySelectorAll('.action-btn').forEach(btn => btn.addEventListener('click', () => updateEventStatus(event.id, btn.dataset.action)));
+            card.querySelector('.delete-btn').addEventListener('click', () => openDeleteModal(event));
+            card.querySelector('.edit-btn').addEventListener('click', () => openEditModal(event));
+            card.querySelector('.add-comment-btn').addEventListener('click', (e) => {
+                const input = e.currentTarget.previousElementSibling;
+                addComment(event.id, input.value);
+                input.value = '';
+            });
+            card.querySelectorAll('.edit-comment-btn').forEach(btn => btn.addEventListener('click', (e) => handleEditComment(e, event.id)));
+            card.querySelectorAll('.delete-comment-btn').forEach(btn => btn.addEventListener('click', (e) => deleteComment(event.id, e.currentTarget.dataset.timestamp)));
+
+            return card;
+        };
+
+        // --- Actions & UI Helpers ---
+        const updateEventStatus = async (id, newStatus) => {
+            await updateDoc(doc(db, eventsCollectionRef.path, id), { status: newStatus });
+        };
+        
+        const addComment = async (eventId, text) => {
+            if (!text.trim()) return;
+
+            let author = sessionStorage.getItem('commenterName');
+            if (!author) {
+                namePromptModal.classList.add('visible');
+                
+                const namePromise = new Promise(resolve => {
+                    saveNameBtn.onclick = () => {
+                        const newName = commenterNameInput.value.trim();
+                        if (newName) {
+                            sessionStorage.setItem('commenterName', newName);
+                            namePromptModal.classList.remove('visible');
+                            resolve(newName);
+                        }
+                    };
+                });
+                author = await namePromise;
+            }
+
+            const comment = {
+                author,
+                text,
+                createdAt: new Date()
+            };
+            
+            const eventDocRef = doc(db, eventsCollectionRef.path, eventId);
+            await updateDoc(eventDocRef, {
+                comments: arrayUnion(comment)
+            });
+        };
+
+        const handleEditComment = (e, eventId) => {
+            const commentItem = e.currentTarget.closest('.comment-item');
+            const commentTextP = commentItem.querySelector('.comment-text');
+            const originalText = commentTextP.textContent;
+            
+            const editInput = document.createElement('input');
+            editInput.type = 'text';
+            editInput.value = originalText;
+            editInput.className = 'w-full px-2 py-1 border border-blue-300 rounded-md text-xs';
+
+            const saveBtn = document.createElement('button');
+            saveBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+            saveBtn.className = 'text-green-600';
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
+            cancelBtn.className = 'text-red-600';
+
+            const editContainer = document.createElement('div');
+            editContainer.className = 'flex items-center gap-2 mt-1';
+            editContainer.append(editInput, saveBtn, cancelBtn);
+            
+            commentTextP.replaceWith(editContainer);
+            lucide.createIcons();
+
+            cancelBtn.onclick = () => editContainer.replaceWith(commentTextP);
+            saveBtn.onclick = () => {
+                updateComment(eventId, e.currentTarget.dataset.timestamp, editInput.value);
+            };
+        };
+
+        const updateComment = async (eventId, timestamp, newText) => {
+            const eventToUpdate = allEvents.find(e => e.id === eventId);
+            if (!eventToUpdate) return;
+
+            const updatedComments = eventToUpdate.comments.map(c => {
+                const cTimestamp = c.createdAt.toDate().toISOString();
+                if (cTimestamp === timestamp) {
+                    return { ...c, text: newText };
+                }
+                return c;
+            });
+
+            const eventDocRef = doc(db, eventsCollectionRef.path, eventId);
+            await updateDoc(eventDocRef, { comments: updatedComments });
+        };
+
+        const deleteComment = async (eventId, timestamp) => {
+            const eventToUpdate = allEvents.find(e => e.id === eventId);
+            if (!eventToUpdate) return;
+            
+            const commentToDelete = eventToUpdate.comments.find(c => c.createdAt.toDate().toISOString() === timestamp);
+            if (commentToDelete) {
+                const eventDocRef = doc(db, eventsCollectionRef.path, eventId);
+                await updateDoc(eventDocRef, {
+                    comments: arrayRemove(commentToDelete)
+                });
+            }
+        };
+
+        const saveEvent = async (e) => {
+            e.preventDefault();
+            const id = eventIdInput.value;
+            
+            const payloadData = [];
+            document.querySelectorAll('.payload-row').forEach(row => {
+                const name = row.querySelector('.payload-name').value.trim();
+                const type = row.querySelector('.payload-type').value;
+                if (name) {
+                    payloadData.push({ name, type });
+                }
+            });
+
+            let data = { 
+                name: eventNameInput.value.trim(), 
+                owner: eventOwnerInput.value.trim() || 'Não atribuído', 
+                section: eventSectionInput.value.trim() || 'N/A', 
+                priority: eventPrioritySelect.value,
+                payload: payloadData
+            };
+            try {
+                if (id) { 
+                    await updateDoc(doc(db, eventsCollectionRef.path, id), data); 
+                } else { 
+                    data.status = 'todo'; 
+                    data.createdAt = new Date();
+                    data.comments = [];
+                    await addDoc(eventsCollectionRef, data); 
+                }
+                closeEventModal();
+            } catch (error) { console.error("Error saving event:", error); }
+        };
+        const updateProgress = (totalCount, doneCount) => {
+            const percentage = totalCount === 0 ? 0 : (doneCount / totalCount) * 100;
+            progressBar.style.width = `${percentage}%`;
+            progressLabel.textContent = `Feito ${doneCount} de ${totalCount}`;
+        };
+        const updateDynamicFilters = () => {
+            const owners = [...new Set(allEvents.map(e => e.owner).filter(Boolean))];
+            const sections = [...new Set(allEvents.map(e => e.section).filter(Boolean))];
+            const populateSelect = (selectEl, items) => {
+                const currentValue = selectEl.value;
+                selectEl.innerHTML = '<option value="all">Todos</option>';
+                items.sort().forEach(item => { selectEl.innerHTML += `<option value="${item}">${item}</option>`; });
+                selectEl.value = items.includes(currentValue) ? currentValue : 'all';
+            };
+            populateSelect(filterOwner, owners);
+            populateSelect(filterSection, sections);
+        };
+        const showToast = (message) => {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        };
+
+        // --- Data Management ---
+        const handleDownloadJson = () => {
+            if (allEvents.length === 0) {
+                showToast("Não há eventos para baixar.");
+                return;
+            }
+            const serializableEvents = allEvents.map(event => {
+                const newEvent = {...event};
+                if (newEvent.createdAt && typeof newEvent.createdAt.toDate === 'function') {
+                    newEvent.createdAt = newEvent.createdAt.toDate().toISOString();
+                }
+                if (Array.isArray(newEvent.comments)) {
+                    newEvent.comments.forEach(c => {
+                        if (c.createdAt && typeof c.createdAt.toDate === 'function') {
+                            c.createdAt = c.createdAt.toDate().toISOString();
+                        }
+                    });
+                }
+                delete newEvent.id;
+                return newEvent;
+            });
+
+            const dataStr = JSON.stringify(serializableEvents, null, 2);
+            const dataBlob = new Blob([dataStr], {type: "application/json"});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.download = `events-${currentAppId}.json`;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+            showToast("Download JSON iniciado!");
+        };
+
+        const handleUpload = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const newOwner = uploadOwnerInput.value.trim();
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const uploadedEvents = JSON.parse(e.target.result);
+                    if (!Array.isArray(uploadedEvents)) {
+                        throw new Error("O arquivo JSON não contém um array.");
+                    }
+                    
+                    showToast("Limpando dados antigos...");
+                    const existingDocs = await getDocs(eventsCollectionRef);
+                    const batchDelete = writeBatch(db);
+                    existingDocs.forEach(doc => batchDelete.delete(doc.ref));
+                    await batchDelete.commit();
+
+                    showToast("Carregando novos eventos...");
+                    const uploadBatch = writeBatch(db);
+                    uploadedEvents.forEach(eventData => {
+                        const newDocRef = doc(eventsCollectionRef);
+                        if (eventData.createdAt) {
+                            eventData.createdAt = new Date(eventData.createdAt);
+                        }
+                        if (Array.isArray(eventData.comments)) {
+                            eventData.comments.forEach(c => {
+                                if(c.createdAt) c.createdAt = new Date(c.createdAt);
+                            });
+                        }
+                        if (newOwner) {
+                            eventData.owner = newOwner;
+                        }
+                        uploadBatch.set(newDocRef, eventData);
+                    });
+                    await uploadBatch.commit();
+                    
+                    uploadOwnerInput.value = '';
+                    showToast("Planilha atualizada com sucesso!");
+
+                } catch (error) {
+                    console.error("Erro ao carregar arquivo:", error);
+                    showToast("Erro: O arquivo não é um JSON válido.");
+                } finally {
+                    uploadInput.value = '';
+                }
+            };
+            reader.readAsText(file);
+        };
+
+
+        // --- Modal Handling & Parser ---
+        const addPayloadRow = (name = '', type = 'string') => {
+            const row = document.createElement('div');
+            row.className = 'payload-row flex items-center gap-2';
+            row.innerHTML = `
+                <input type="text" class="payload-name w-full px-3 py-1 border border-gray-300 rounded-md" placeholder="Nome da Propriedade" value="${name}">
+                <select class="payload-type form-select w-full px-3 py-1 border border-gray-300 rounded-md bg-white">
+                    <option value="string" ${type === 'string' ? 'selected' : ''}>String</option>
+                    <option value="number" ${type === 'number' ? 'selected' : ''}>Number</option>
+                    <option value="boolean" ${type === 'boolean' ? 'selected' : ''}>Boolean</option>
+                    <option value="array" ${type === 'array' ? 'selected' : ''}>Array</option>
+                </select>
+                <button type="button" class="remove-payload-btn text-red-500 hover:text-red-700 flex-shrink-0"><i data-lucide="x-circle" class="w-5 h-5"></i></button>
+            `;
+            row.querySelector('.remove-payload-btn').addEventListener('click', () => row.remove());
+            payloadList.appendChild(row);
+            lucide.createIcons();
+        };
+        
+        const parseAndFillForm = () => {
+            const code = codeInput.value;
+            if (!code.includes('rudderanalytics.track')) {
+                showToast("Código inválido. Cole o snippet do evento.");
+                return;
+            }
+
+            try {
+                // Extract event name
+                const eventNameMatch = code.match(/rudderanalytics\.track\s*\(\s*["']([^"']+)["']/);
+                const eventName = eventNameMatch ? eventNameMatch[1] : '';
+                
+                // Extract properties object
+                const objectMatch = code.match(/,\s*(\{[\s\S]*?\})\s*\)/);
+                if (!objectMatch) throw new Error("Objeto de propriedades não encontrado.");
+
+                let objectStr = objectMatch[1];
+                // Remove comments
+                objectStr = objectStr.replace(/\/\/.*/g, '');
+                // Add quotes to keys
+                objectStr = objectStr.replace(/(\w+)\s*:/g, '"$1":');
+                // Fix trailing commas
+                objectStr = objectStr.replace(/,\s*([}\]])/g, '$1');
+
+                const properties = JSON.parse(objectStr);
+
+                eventNameInput.value = eventName;
+                payloadList.innerHTML = ''; // Clear existing payload
+                
+                for (const key in properties) {
+                    const value = properties[key];
+                    let type = typeof value;
+                    if (Array.isArray(value)) {
+                        type = 'array';
+                    } else if (type === 'object' && value !== null) {
+                        type = 'object'; // Could be more specific, but 'object' is a safe default
+                    }
+                    addPayloadRow(key, type);
+                }
+                
+                showToast("Formulário preenchido com sucesso!");
+                parserView.classList.add('hidden');
+                eventForm.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Erro de parse:", error);
+                showToast("Erro ao analisar o código. Verifique o formato.");
+            }
+        };
+
+        addPayloadBtn.addEventListener('click', () => addPayloadRow());
+
+        const openEventModal = () => eventModal.classList.add('visible');
+        const closeEventModal = () => {
+            eventModal.classList.remove('visible');
+            // Ensure form is visible and parser is hidden when closing
+            parserView.classList.add('hidden');
+            eventForm.classList.remove('hidden');
+        }
+        const openAddModal = () => { 
+            eventForm.reset(); 
+            payloadList.innerHTML = '';
+            addPayloadRow();
+            eventIdInput.value = ''; 
+            modalTitle.textContent = 'Adicionar Novo Evento'; 
+            openEventModal(); 
+        };
+        const openEditModal = (event) => { 
+            eventForm.reset(); 
+            payloadList.innerHTML = '';
+            if (Array.isArray(event.payload) && event.payload.length > 0) {
+                event.payload.forEach(p => addPayloadRow(p.name, p.type));
+            } else {
+                addPayloadRow();
+            }
+            modalTitle.textContent = 'Editar Evento'; 
+            eventIdInput.value = event.id; 
+            eventNameInput.value = event.name; 
+            eventOwnerInput.value = event.owner; 
+            eventSectionInput.value = event.section; 
+            eventPrioritySelect.value = event.priority; 
+            openEventModal(); 
+        };
+        const openDeleteModal = (event) => {
+            deleteModalText.textContent = `Tem certeza que deseja excluir o evento "${event.name}"? Esta ação não pode ser desfeita.`;
+            confirmDeleteBtn.onclick = async () => { await deleteDoc(doc(db, eventsCollectionRef.path, event.id)); closeDeleteModal(); };
+            deleteModal.classList.add('visible');
+        };
+        const closeDeleteModal = () => deleteModal.classList.remove('visible');
+
+        // --- Bulk Edit ---
+        const updateBulkActionsBar = () => {
+            const count = selectedEvents.size;
+            if (count > 0) {
+                bulkSelectedCount.textContent = `${count} evento(s) selecionado(s)`;
+                bulkActionsBar.classList.remove('hidden');
+                bulkActionsBar.classList.remove('translate-y-full');
+            } else {
+                bulkActionsBar.classList.add('translate-y-full');
+                setTimeout(() => bulkActionsBar.classList.add('hidden'), 300);
+            }
+        };
+
+        const handleBulkEdit = async (e) => {
+            e.preventDefault();
+            const updateData = {};
+            const newOwner = document.getElementById('bulkOwnerInput').value.trim();
+            const newSection = document.getElementById('bulkSectionInput').value.trim();
+            const newPriority = document.getElementById('bulkPrioritySelect').value;
+            const newStatus = document.getElementById('bulkStatusSelect').value;
+
+            if (newOwner) updateData.owner = newOwner;
+            if (newSection) updateData.section = newSection;
+            if (newPriority) updateData.priority = newPriority;
+            if (newStatus) updateData.status = newStatus;
+
+            if (Object.keys(updateData).length === 0) {
+                showToast("Nenhuma alteração foi feita.");
+                return;
+            }
+
+            const batch = writeBatch(db);
+            selectedEvents.forEach(eventId => {
+                const docRef = doc(db, eventsCollectionRef.path, eventId);
+                batch.update(docRef, updateData);
+            });
+
+            try {
+                await batch.commit();
+                showToast(`${selectedEvents.size} evento(s) atualizado(s) com sucesso!`);
+            } catch (error) {
+                console.error("Erro na edição em massa:", error);
+                showToast("Ocorreu um erro ao atualizar os eventos.");
+            } finally {
+                selectedEvents.clear();
+                document.querySelectorAll('.bulk-select-checkbox').forEach(cb => cb.checked = false);
+                updateBulkActionsBar();
+                bulkEditModal.classList.remove('visible');
+            }
+        };
+
+        // --- Event Listeners ---
+        downloadJsonBtn.addEventListener('click', handleDownloadJson);
+        uploadInput.addEventListener('change', handleUpload);
+
+        searchInput.addEventListener('input', renderEvents);
+        filterOwner.addEventListener('input', renderEvents);
+        filterSection.addEventListener('input', renderEvents);
+        sortSelect.addEventListener('input', renderEvents);
+        
+        openAddModalBtn.addEventListener('click', openAddModal);
+        cancelBtn.addEventListener('click', closeEventModal);
+        eventForm.addEventListener('submit', saveEvent);
+        cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+        
+        // Parser listeners
+        openParserBtn.addEventListener('click', () => {
+            eventForm.classList.add('hidden');
+            parserView.classList.remove('hidden');
+        });
+        backToFormBtn.addEventListener('click', () => {
+            parserView.classList.add('hidden');
+            eventForm.classList.remove('hidden');
+        });
+        parseCodeBtn.addEventListener('click', parseAndFillForm);
+
+        // View Toggle Listeners
+        kanbanViewBtn.addEventListener('click', () => {
+            kanbanView.classList.remove('hidden');
+            kanbanControls.classList.remove('hidden');
+            eventMapView.classList.add('hidden');
+            kanbanViewBtn.classList.add('active');
+            mapViewBtn.classList.remove('active');
+        });
+        mapViewBtn.addEventListener('click', () => {
+            kanbanView.classList.add('hidden');
+            kanbanControls.classList.add('hidden');
+            eventMapView.classList.remove('hidden');
+            kanbanViewBtn.classList.remove('active');
+            mapViewBtn.classList.add('active');
+        });
+        
+        // Map View Click Listener
+        eventMapView.addEventListener('click', (e) => {
+            const targetLi = e.target.closest('.map-event-item');
+            if (targetLi) {
+                const eventId = targetLi.dataset.eventId;
+                const eventToEdit = allEvents.find(event => event.id === eventId);
+                if (eventToEdit) {
+                    openEditModal(eventToEdit);
+                }
+            }
+        });
+        
+        // Bulk Edit Listeners
+        kanbanView.addEventListener('change', (e) => {
+            if (e.target.classList.contains('bulk-select-checkbox')) {
+                const eventId = e.target.dataset.eventId;
+                if (e.target.checked) {
+                    selectedEvents.add(eventId);
+                } else {
+                    selectedEvents.delete(eventId);
+                }
+                updateBulkActionsBar();
+            }
+        });
+        openBulkEditBtn.addEventListener('click', () => {
+            bulkEditForm.reset();
+            bulkEditModal.classList.add('visible');
+        });
+        cancelBulkEditBtn.addEventListener('click', () => bulkEditModal.classList.remove('visible'));
+        bulkEditForm.addEventListener('submit', handleBulkEdit);
+
+
+        // --- Initial Load ---
+        handleAppLoad();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
