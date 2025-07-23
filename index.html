@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,25 +8,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        html.dark { color-scheme: dark; }
         body { font-family: 'Inter', sans-serif; }
         .card { transition: all 0.2s ease-in-out; }
-        .card:hover { transform: translateY(-2px); box-shadow: 0 4px_12px rgba(0,0,0,0.1); }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .dark .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(9, 9, 11, 0.5);
             display: flex; justify-content: center; align-items: center;
             z-index: 1000; opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
         }
         .modal-backdrop.visible { opacity: 1; pointer-events: auto; }
         .modal-content {
-            background-color: white; padding: 2rem; border-radius: 0.75rem;
+            background-color: #18181b; border: 1px solid #27272a;
+            padding: 2rem; border-radius: 0.75rem;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            max-width: 95%; width: 550px;
+            max-width: 95%; width: 600px;
             transform: scale(0.95); transition: transform 0.3s ease;
         }
         .modal-backdrop.visible .modal-content { transform: scale(1); }
         .form-select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-position: right 0.5rem center;
             background-repeat: no-repeat;
             background-size: 1.5em 1.5em;
@@ -41,8 +44,8 @@
             transform: translateX(-50%);
             padding: 12px 24px;
             border-radius: 9999px;
-            background-color: #2d3748;
-            color: white;
+            background-color: #09090b;
+            color: #fafafa;
             font-weight: 600;
             z-index: 2000;
             opacity: 0;
@@ -56,138 +59,228 @@
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
         .hidden { display: none; }
-        .view-toggle-btn.active, .view-toggle-btn.active:hover {
-            background-color: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
+        .nav-link.active {
+            color: #f97316;
+            border-bottom-color: #f97316;
+        }
+        /* FIX: Added styles for code wrapping in the generator modal */
+        #generatedCode {
+            white-space: pre-wrap;   /* Wraps the text content */
+            word-wrap: break-word;   /* Breaks long words to prevent overflow */
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-zinc-900 text-gray-200">
 
-    <!-- Main App Container -->
-    <div id="app-container" class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-screen-2xl">
-        <!-- Header -->
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-blue-600">RudderStack Event Tracker</h1>
-            <p class="text-gray-600 mt-2">Uma forma inteligente de gerenciar seus eventos.</p>
-            <div class="mt-6 flex justify-center items-center gap-4">
-                <div class="inline-block bg-white border border-gray-200 rounded-full px-4 py-2 text-sm font-semibold text-gray-700">
-                    <span class="font-bold">ID da Planilha:</span> <span id="appIdDisplay">carregando...</span>
+    <header class="bg-zinc-900/80 backdrop-blur-sm border-b border-zinc-800 sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="layout-template" class="text-orange-500"></i>
+                    <span class="font-bold text-xl">Event Tracker</span>
+                </div>
+                <div class="flex items-center gap-2 bg-zinc-800 px-3 py-1 rounded-full">
+                     <span class="text-xs font-mono text-zinc-400">Sheet ID:</span>
+                     <span id="appIdDisplay" class="text-xs font-mono text-orange-400">Carregando...</span>
                 </div>
             </div>
-        </header>
+            <div id="nav-links" class="flex items-center gap-6">
+                <a href="#kanban" id="kanbanViewBtn" class="nav-link active text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Kanban</a>
+                <a href="#map" id="mapViewBtn" class="nav-link text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Mapa de Eventos</a>
+                <a href="#readme" id="readmeViewBtn" class="nav-link text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Como Usar</a>
+            </div>
+        </nav>
+    </header>
 
+    <!-- Main App Container -->
+    <main id="app-container" class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-screen-2xl">
+        
         <!-- Controls Toolbar -->
-        <div class="mb-8 p-4 bg-white rounded-xl shadow-md space-y-6">
+        <div class="mb-8 p-6 bg-zinc-900 border border-zinc-800 rounded-xl shadow-sm space-y-6">
             <!-- Search and Filter Section -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 <div class="lg:col-span-2">
-                    <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">Buscar Evento</label>
-                    <div class="relative"><input type="text" id="searchInput" placeholder="Buscar por nome..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i></div>
+                    <label for="searchInput" class="block text-sm font-medium text-gray-300 mb-1">Buscar Evento</label>
+                    <div class="relative"><input type="text" id="searchInput" placeholder="Buscar por nome..." class="w-full pl-10 pr-4 py-2 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-zinc-800 text-gray-200"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i></div>
                 </div>
                 <div>
-                     <label for="filterOwner" class="block text-sm font-medium text-gray-700 mb-1">Responsável</label>
-                     <select id="filterOwner" class="form-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"></select>
+                     <label for="filterOwner" class="block text-sm font-medium text-gray-300 mb-1">Responsável</label>
+                     <select id="filterOwner" class="form-select w-full px-4 py-2 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-zinc-800 text-gray-200"></select>
                 </div>
                 <div>
-                     <label for="filterSection" class="block text-sm font-medium text-gray-700 mb-1">Seção</label>
-                     <select id="filterSection" class="form-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"></select>
+                     <label for="filterSection" class="block text-sm font-medium text-gray-300 mb-1">Seção</label>
+                     <select id="filterSection" class="form-select w-full px-4 py-2 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-zinc-800 text-gray-200"></select>
                 </div>
             </div>
-             <button id="openAddModalBtn" class="w-full bg-blue-600 text-white font-semibold px-4 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i>Adicionar Novo Evento</button>
+             <button id="openAddModalBtn" class="w-full bg-orange-500 text-white font-semibold px-4 py-3 rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i>Adicionar Novo Evento</button>
         </div>
 
-        <!-- View Toggle -->
-        <div class="mb-6 flex justify-center">
-            <div class="inline-flex rounded-lg shadow-sm">
-                <button id="kanbanViewBtn" class="view-toggle-btn active px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-blue-500">Visualização Kanban</button>
-                <button id="mapViewBtn" class="view-toggle-btn px-4 py-2 text-sm font-semibold text-gray-700 bg-white border-t border-b border-r border-gray-300 rounded-r-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-blue-500">Mapa de Eventos</button>
-            </div>
-        </div>
+        <!-- Views Container -->
+        <div id="views-container">
+            <!-- Kanban View -->
+            <div id="kanban-view" class="view">
+                <!-- Progress and Sort -->
+                <div id="kanban-controls" class="mb-8 max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="w-full sm:w-2/3">
+                        <div class="flex justify-between mb-1"><span class="text-base font-medium text-orange-400">Progresso</span><span id="progressLabel" class="text-sm font-medium text-orange-400">Calculando...</span></div>
+                        <div class="w-full bg-zinc-700 rounded-full h-4"><div id="progressBar" class="bg-gradient-to-r from-yellow-400 to-orange-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                    </div>
+                    <div class="w-full sm:w-auto">
+                        <label for="sortSelect" class="sr-only">Ordenar</label>
+                        <select id="sortSelect" class="form-select w-full px-4 py-2 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-zinc-800 text-gray-200">
+                            <option value="createdAt">Ordenar por Data</option>
+                            <option value="priority">Ordenar por Prioridade</option>
+                        </select>
+                    </div>
+                </div>
 
-        <!-- Progress and Sort -->
-        <div id="kanban-controls" class="mb-6 max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="w-full sm:w-2/3">
-                <div class="flex justify-between mb-1"><span class="text-base font-medium text-blue-700">Progresso</span><span id="progressLabel" class="text-sm font-medium text-blue-700">Calculando...</span></div>
-                <div class="w-full bg-gray-200 rounded-full h-4"><div id="progressBar" class="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                <!-- Event Lists -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-4 text-center text-red-500 flex items-center justify-center gap-2"><i data-lucide="list" class="inline-block"></i>A Fazer</h2>
+                        <div id="todo-list" data-status="todo" class="column bg-zinc-900/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold mb-4 text-center text-yellow-500 flex items-center justify-center gap-2"><i data-lucide="loader-2" class="inline-block"></i>Em Progresso</h2>
+                        <div id="inprogress-list" data-status="inprogress" class="column bg-zinc-900/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold mb-4 text-center text-green-500 flex items-center justify-center gap-2"><i data-lucide="check-circle-2" class="inline-block"></i>Feito</h2>
+                        <div id="done-list" data-status="done" class="column bg-zinc-900/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
+                    </div>
+                </div>
             </div>
-            <div class="w-full sm:w-auto">
-                <label for="sortSelect" class="sr-only">Ordenar</label>
-                <select id="sortSelect" class="form-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                    <option value="createdAt">Ordenar por Data</option>
-                    <option value="priority">Ordenar por Prioridade</option>
-                </select>
-            </div>
-        </div>
 
-        <!-- Event Lists (Kanban View) -->
-        <div id="kanban-view" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div>
-                <h2 class="text-2xl font-bold mb-4 text-center text-red-600 flex items-center justify-center gap-2"><i data-lucide="list" class="inline-block"></i>A Fazer</h2>
-                <div id="todo-list" class="bg-gray-200/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
+            <!-- Event Map View -->
+            <div id="event-map-view" class="view hidden bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-sm space-y-6">
+                <!-- Content will be generated by JS -->
             </div>
-            <div>
-                <h2 class="text-2xl font-bold mb-4 text-center text-yellow-600 flex items-center justify-center gap-2"><i data-lucide="loader-2" class="inline-block"></i>Em Progresso</h2>
-                <div id="inprogress-list" class="bg-gray-200/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
-            </div>
-            <div>
-                <h2 class="text-2xl font-bold mb-4 text-center text-green-600 flex items-center justify-center gap-2"><i data-lucide="check-circle-2" class="inline-block"></i>Feito</h2>
-                <div id="done-list" class="bg-gray-200/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
-            </div>
-        </div>
 
-        <!-- Event Map View -->
-        <div id="event-map-view" class="hidden bg-white p-6 rounded-xl shadow-md space-y-6">
-            <!-- Content will be generated by JS -->
+            <!-- README View -->
+            <div id="readme-view" class="view hidden bg-zinc-900 border border-zinc-800 p-8 rounded-xl shadow-sm prose prose-invert max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold text-orange-500">Como Usar o Gerador de Funções</h2>
+                <p class="mt-4 text-gray-400">Este guia explica como usar o código gerado por este aplicativo para implementar o tracking de eventos de forma padronizada.</p>
+                
+                <div class="mt-8 space-y-8">
+                    <div>
+                        <h3 class="text-xl font-semibold">1. A Função `trackEvent` Genérica</h3>
+                        <p class="mt-2 text-gray-400">A base de tudo é uma função genérica `trackEvent`. Você deve ter uma função similar no seu projeto. Ela é responsável por se comunicar com o RudderStack.</p>
+                        <pre class="mt-2 bg-zinc-800 p-4 rounded-lg text-sm overflow-x-auto"><code class="language-javascript">async function trackEvent(eventData) {
+  const eventId = eventData.id || `${eventData.eventName}-${JSON.stringify(eventData.properties)}`;
+  
+  if (window.rudderanalytics && typeof window.rudderanalytics.track === "function") {
+    window.rudderanalytics.track(
+      eventData.eventName,
+      eventData.properties || {}
+    );
+  }
+  
+  return { success: true, eventId };
+}</code></pre>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold">2. Gerando o Código do Evento</h3>
+                        <p class="mt-2 text-gray-400">Para cada card no Kanban, clique no ícone de código (<i data-lucide="code" class="inline-block w-4 h-4"></i>). Isso abrirá o "Gerador de Código".</p>
+                        <p class="mt-2 text-gray-400">O gerador cria duas funções para você:</p>
+                        <ul class="list-disc list-inside mt-2 text-gray-400 space-y-1">
+                            <li>Uma função de mapeamento (ex: `getCheckoutStartedProperties`).</li>
+                            <li>Uma função de tracking (ex: `trackCheckoutStarted`).</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold">3. Exemplo de Código Gerado</h3>
+                        <p class="mt-2 text-gray-400">Para um evento "Checkout Started", o código gerado será parecido com este:</p>
+                        <pre class="mt-2 bg-zinc-800 p-4 rounded-lg text-sm overflow-x-auto"><code class="language-javascript">/**
+ * Mapeia os dados brutos para as propriedades do evento "Checkout Started".
+ * @param {object} rawData - O objeto de dados original (ex: vindo de uma API).
+ * @returns {object} - Um objeto com as propriedades formatadas.
+ */
+function getCheckoutStartedProperties(rawData) {
+  return {
+    discount: rawData.discountValue || null, // number
+    affiliation: rawData.affiliationSource || "example", // string
+    shipping: rawData.shippingCost || null, // number
+    // ... e assim por diante para todas as propriedades
+  };
+}
+
+/**
+ * Dispara o evento "Checkout Started".
+ * @param {object} rawData - O objeto de dados original para ser mapeado.
+ */
+function trackCheckoutStarted(rawData) {
+  trackEvent({
+    id: "CheckoutStarted",
+    eventName: "Checkout Started",
+    properties: getCheckoutStartedProperties(rawData),
+  });
+}
+
+// Exemplo de como usar:
+// const checkoutData = { discountValue: 10.50, ... };
+// trackCheckoutStarted(checkoutData);
+</code></pre>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold">4. Adaptando e Usando</h3>
+                        <p class="mt-2 text-gray-400">Copie as funções geradas para o seu código. A única coisa que você precisa fazer é **ajustar a função de mapeamento** (a `get...Properties`) para que ela pegue os dados do seu objeto `rawData` real. O gerador usa nomes genéricos como `rawData.discountValue`, e você deve substituir pelos nomes corretos das suas variáveis.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </main>
 
     <!-- Add/Edit Modal -->
     <div id="eventModal" class="modal-backdrop">
         <div class="modal-content">
             <div id="parser-view" class="hidden space-y-4">
                  <h3 class="text-lg font-semibold">Preencher com Código</h3>
-                 <p class="text-sm text-gray-600">Cole seu código `rudderanalytics.track(...)` abaixo para preencher o formulário automaticamente.</p>
-                 <textarea id="codeInput" class="w-full h-40 p-2 border rounded-md font-mono text-sm" placeholder='rudderanalytics.track("Event Name", { key: "value" });'></textarea>
+                 <p class="text-sm text-gray-400">Cole seu código `rudderanalytics.track(...)` abaixo para preencher o formulário automaticamente.</p>
+                 <textarea id="codeInput" class="w-full h-40 p-2 border rounded-md font-mono text-sm bg-gray-800 border-gray-600" placeholder='rudderanalytics.track("Event Name", { key: "value" });'></textarea>
                  <div class="flex justify-end gap-2">
-                    <button type="button" id="backToFormBtn" class="bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-lg hover:bg-gray-300">Voltar</button>
-                    <button type="button" id="parseCodeBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700">Analisar</button>
+                     <button type="button" id="backToFormBtn" class="bg-gray-600 text-gray-200 font-semibold px-4 py-2 rounded-lg hover:bg-gray-500">Voltar</button>
+                     <button type="button" id="parseCodeBtn" class="bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-600">Analisar</button>
                  </div>
             </div>
             <form id="eventForm">
                 <div class="flex justify-between items-center mb-6">
                     <h2 id="modalTitle" class="text-2xl font-bold">Adicionar Novo Evento</h2>
-                    <button type="button" id="openParserBtn" title="Preencher com Código" class="text-blue-600 hover:text-blue-800 flex items-center gap-2 font-semibold">
+                    <button type="button" id="openParserBtn" title="Preencher com Código" class="text-orange-500 hover:text-orange-600 flex items-center gap-2 font-semibold">
                         <i data-lucide="wand-2" class="w-5 h-5"></i>
                         <span>Preencher com Código</span>
                     </button>
                 </div>
                 <input type="hidden" id="eventId">
                 <div class="space-y-4">
-                    <input type="text" id="eventNameInput" placeholder="Nome do Evento" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <input type="text" id="eventNameInput" placeholder="Nome do Evento" class="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-700" required>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <input type="text" id="eventOwnerInput" placeholder="Responsável" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <input type="text" id="eventSectionInput" placeholder="Seção do Site" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="eventOwnerInput" placeholder="Responsável" class="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-700">
+                        <input type="text" id="eventSectionInput" placeholder="Seção do Site" class="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-700">
                     </div>
-                    <select id="eventPrioritySelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                        <option value="Baixa">Prioridade: Baixa</option>
-                        <option value="Média">Prioridade: Média</option>
-                        <option value="Alta">Prioridade: Alta</option>
-                    </select>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <select id="eventPrioritySelect" class="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-700">
+                            <option value="Baixa">Prioridade: Baixa</option>
+                            <option value="Média">Prioridade: Média</option>
+                            <option value="Alta">Prioridade: Alta</option>
+                        </select>
+                        <select id="eventTypeSelect" class="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-700">
+                            <option value="Página">Tipo: Página</option>
+                            <option value="Componente">Tipo: Componente</option>
+                        </select>
+                    </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Dados do Evento (Payload)</label>
-                        <div class="max-h-48 overflow-y-auto p-2 border rounded-lg bg-gray-50">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Dados do Evento (Payload)</label>
+                        <div class="max-h-48 overflow-y-auto p-2 border rounded-lg bg-gray-800 border-zinc-700">
                             <div id="payload-list" class="space-y-2"></div>
                         </div>
-                        <button type="button" id="addPayloadBtn" class="mt-2 text-sm text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1">
+                        <button type="button" id="addPayloadBtn" class="mt-2 text-sm text-orange-500 font-semibold hover:text-orange-600 flex items-center gap-1">
                             <i data-lucide="plus-circle" class="w-4 h-4"></i>Adicionar Propriedade
                         </button>
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end gap-4">
-                    <button type="button" id="cancelBtn" class="bg-gray-200 text-gray-800 font-semibold px-6 py-2 rounded-lg hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" id="saveBtn" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700">Salvar</button>
+                    <button type="button" id="cancelBtn" class="bg-gray-600 text-gray-200 font-semibold px-6 py-2 rounded-lg hover:bg-gray-500">Cancelar</button>
+                    <button type="submit" id="saveBtn" class="bg-orange-500 text-white font-semibold px-6 py-2 rounded-lg hover:bg-orange-600">Salvar</button>
                 </div>
             </form>
         </div>
@@ -196,12 +289,12 @@
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal-backdrop">
         <div class="modal-content text-center">
-             <i data-lucide="alert-triangle" class="mx-auto w-12 h-12 text-red-500 mb-4"></i>
+             <i data-lucide="alert-triangle" class="mx-auto w-12 h-12 text-red-500"></i>
              <h2 class="text-xl font-bold mb-2">Confirmar Exclusão</h2>
-             <p id="deleteModalText" class="text-gray-600 mb-6">Você tem certeza?</p>
+             <p id="deleteModalText" class="text-gray-400 mb-6">Você tem certeza?</p>
              <div class="flex justify-center gap-4">
-                <button id="cancelDeleteBtn" class="bg-gray-200 text-gray-800 font-semibold px-6 py-2 rounded-lg hover:bg-gray-300">Cancelar</button>
-                <button id="confirmDeleteBtn" class="bg-red-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-red-700">Excluir</button>
+                 <button id="cancelDeleteBtn" class="bg-gray-600 text-gray-200 font-semibold px-6 py-2 rounded-lg hover:bg-gray-500">Cancelar</button>
+                 <button id="confirmDeleteBtn" class="bg-red-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-red-700">Excluir</button>
              </div>
         </div>
     </div>
@@ -210,64 +303,35 @@
     <div id="namePromptModal" class="modal-backdrop">
         <div class="modal-content">
             <h2 class="text-xl font-bold mb-4">Qual é o seu nome?</h2>
-            <p class="text-gray-600 mb-6">Seu nome será exibido nos comentários que você adicionar.</p>
-            <input type="text" id="commenterNameInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Seu nome">
+            <p class="text-gray-400 mb-6">Seu nome será exibido nos comentários que você adicionar.</p>
+            <input type="text" id="commenterNameInput" class="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-700" placeholder="Seu nome">
             <div class="mt-6 flex justify-end">
-                <button id="saveNameBtn" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700">Salvar</button>
+                <button id="saveNameBtn" class="bg-orange-500 text-white font-semibold px-6 py-2 rounded-lg hover:bg-orange-600">Salvar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Code Generator Modal -->
+    <div id="codeGeneratorModal" class="modal-backdrop">
+        <!-- FIX: Make the modal content a flex column with a max height -->
+        <div class="modal-content flex flex-col max-h-[85vh]">
+            <h2 class="text-2xl font-bold mb-4 flex-shrink-0">Gerador de Código</h2>
+            <p class="text-sm text-gray-400 mb-4 flex-shrink-0">Copie e cole este código em seu projeto para disparar o evento.</p>
+            
+            <!-- FIX: This div will contain the pre block and will be the scrollable area -->
+            <div class="flex-grow overflow-auto bg-zinc-900 rounded-lg">
+                 <pre class="p-4 text-sm"><code id="generatedCode" class="language-javascript"></code></pre>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-4 flex-shrink-0">
+                <button type="button" id="closeCodeModalBtn" class="bg-gray-600 text-gray-200 font-semibold px-6 py-2 rounded-lg hover:bg-gray-500">Fechar</button>
+                <button type="button" id="copyCodeBtn" class="bg-orange-500 text-white font-semibold px-6 py-2 rounded-lg hover:bg-orange-600">Copiar Código</button>
             </div>
         </div>
     </div>
 
-    <!-- Bulk Edit Modal -->
-    <div id="bulkEditModal" class="modal-backdrop">
-        <div class="modal-content">
-            <h2 class="text-2xl font-bold mb-6">Edição em Massa</h2>
-            <form id="bulkEditForm" class="space-y-4">
-                <div>
-                    <label for="bulkOwnerInput" class="block text-sm font-medium text-gray-700">Responsável</label>
-                    <input type="text" id="bulkOwnerInput" placeholder="Manter original" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="bulkSectionInput" class="block text-sm font-medium text-gray-700">Seção do Site</label>
-                    <input type="text" id="bulkSectionInput" placeholder="Manter original" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="bulkPrioritySelect" class="block text-sm font-medium text-gray-700">Prioridade</label>
-                    <select id="bulkPrioritySelect" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                        <option value="">Manter original</option>
-                        <option value="Baixa">Baixa</option>
-                        <option value="Média">Média</option>
-                        <option value="Alta">Alta</option>
-                    </select>
-                </div>
-                 <div>
-                    <label for="bulkStatusSelect" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select id="bulkStatusSelect" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                        <option value="">Manter original</option>
-                        <option value="todo">A Fazer</option>
-                        <option value="inprogress">Em Progresso</option>
-                        <option value="done">Feito</option>
-                    </select>
-                </div>
-                <div class="mt-8 flex justify-end gap-4">
-                    <button type="button" id="cancelBulkEditBtn" class="bg-gray-200 text-gray-800 font-semibold px-6 py-2 rounded-lg hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700">Aplicar Mudanças</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
+
     <div id="toast-notification" class="toast"></div>
-
-    <!-- Bulk Actions Bar -->
-    <div id="bulk-actions-bar" class="hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-xl bg-white p-3 rounded-t-lg shadow-2xl flex items-center justify-between gap-4 transition-transform duration-300 transform translate-y-full">
-        <span id="bulk-selected-count" class="font-semibold text-gray-700"></span>
-        <button id="openBulkEditBtn" class="bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-            <i data-lucide="edit" class="w-4 h-4"></i>
-            Editar Selecionados
-        </button>
-    </div>
-
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
@@ -308,6 +372,7 @@
         const eventNameInput = document.getElementById('eventNameInput');
         const eventOwnerInput = document.getElementById('eventOwnerInput');
         const eventSectionInput = document.getElementById('eventSectionInput');
+        const eventTypeSelect = document.getElementById('eventTypeSelect');
         const payloadList = document.getElementById('payload-list');
         const addPayloadBtn = document.getElementById('addPayloadBtn');
         const eventPrioritySelect = document.getElementById('eventPrioritySelect');
@@ -330,16 +395,16 @@
         // View Toggle
         const kanbanViewBtn = document.getElementById('kanbanViewBtn');
         const mapViewBtn = document.getElementById('mapViewBtn');
+        const readmeViewBtn = document.getElementById('readmeViewBtn');
         const kanbanView = document.getElementById('kanban-view');
         const eventMapView = document.getElementById('event-map-view');
+        const readmeView = document.getElementById('readme-view');
         const kanbanControls = document.getElementById('kanban-controls');
-        // Bulk Edit
-        const bulkActionsBar = document.getElementById('bulk-actions-bar');
-        const bulkSelectedCount = document.getElementById('bulk-selected-count');
-        const openBulkEditBtn = document.getElementById('openBulkEditBtn');
-        const bulkEditModal = document.getElementById('bulkEditModal');
-        const bulkEditForm = document.getElementById('bulkEditForm');
-        const cancelBulkEditBtn = document.getElementById('cancelBulkEditBtn');
+        // Code Generator Modal
+        const codeGeneratorModal = document.getElementById('codeGeneratorModal');
+        const generatedCode = document.getElementById('generatedCode');
+        const copyCodeBtn = document.getElementById('copyCodeBtn');
+        const closeCodeModalBtn = document.getElementById('closeCodeModalBtn');
 
         // --- App State ---
         let currentAppId = null;
@@ -347,7 +412,6 @@
         let eventsCollectionRef;
         let allEvents = [];
         let unsubscribe;
-        let selectedEvents = new Set();
 
         // --- App Initialization ---
         const handleAppLoad = () => {
@@ -363,7 +427,9 @@
 
         const initializeAppForId = (appId) => {
             currentAppId = appId;
-            appIdDisplay.textContent = currentAppId;
+            if (appIdDisplay) { // Check if element exists before using it
+                appIdDisplay.textContent = currentAppId;
+            }
 
             signInAnonymously(auth)
                 .then((userCredential) => {
@@ -374,7 +440,9 @@
                 })
                 .catch((error) => {
                     console.error("Authentication Error:", error);
-                    appIdDisplay.textContent = "Erro de autenticação";
+                    if (appIdDisplay) {
+                        appIdDisplay.textContent = "Erro de autenticação";
+                    }
                 });
         };
         
@@ -382,13 +450,9 @@
         const listenForEvents = () => {
             if (!eventsCollectionRef) return;
             unsubscribe = onSnapshot(eventsCollectionRef, (snapshot) => {
-                if (snapshot.empty) {
-                    seedDatabaseWithInitialData();
-                } else {
-                    allEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderEvents();
-                    renderEventMap();
-                }
+                allEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderEvents();
+                renderEventMap();
             });
         };
 
@@ -412,14 +476,14 @@
             }
             
             if (filteredEvents.length === 0 && allEvents.length > 0) {
-                 const emptyMessage = `<p class="text-gray-500 text-center p-4">Nenhum evento corresponde aos filtros atuais.</p>`;
+                 const emptyMessage = `<p class="text-gray-500 dark:text-gray-400 text-center p-4">Nenhum evento corresponde aos filtros atuais.</p>`;
                  todoList.innerHTML = emptyMessage;
                  inprogressList.innerHTML = emptyMessage;
                  doneList.innerHTML = emptyMessage;
             } else if (allEvents.length === 0) {
-                 todoList.innerHTML = `<p class="text-gray-500 text-center p-4">Nenhum evento a fazer. Adicione um!</p>`;
-                 inprogressList.innerHTML = `<p class="text-gray-500 text-center p-4">Nenhum evento em progresso.</p>`;
-                 doneList.innerHTML = `<p class="text-gray-500 text-center p-4">Nenhum evento concluído.</p>`;
+                 todoList.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center p-4">Nenhum evento a fazer. Adicione um!</p>`;
+                 inprogressList.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center p-4">Nenhum evento em progresso.</p>`;
+                 doneList.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center p-4">Nenhum evento concluído.</p>`;
             }
 
             filteredEvents.forEach(event => {
@@ -441,28 +505,37 @@
             const eventsBySection = allEvents.reduce((acc, event) => {
                 const section = event.section || 'Não Categorizado';
                 if (!acc[section]) {
-                    acc[section] = [];
+                    acc[section] = { events: [], owners: new Set() };
                 }
-                acc[section].push(event);
+                acc[section].events.push(event);
+                if (event.owner && event.owner !== 'Não atribuído') {
+                    acc[section].owners.add(event.owner);
+                }
                 return acc;
             }, {});
 
             if (Object.keys(eventsBySection).length === 0) {
-                eventMapView.innerHTML = `<p class="text-gray-500 text-center p-4">Nenhum evento para exibir no mapa. Adicione um evento com uma seção.</p>`;
+                eventMapView.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center p-4">Nenhum evento para exibir no mapa. Adicione um evento com uma seção.</p>`;
                 return;
             }
 
             for (const section in eventsBySection) {
-                const sectionEvents = eventsBySection[section];
+                const sectionData = eventsBySection[section];
+                const sectionEvents = sectionData.events;
+                const owners = Array.from(sectionData.owners).join(', ');
+
                 const todoCount = sectionEvents.filter(e => e.status === 'todo' || !e.status).length;
                 const inprogressCount = sectionEvents.filter(e => e.status === 'inprogress').length;
                 const doneCount = sectionEvents.filter(e => e.status === 'done').length;
 
                 const sectionDiv = document.createElement('div');
-                sectionDiv.className = 'border-b pb-4';
+                sectionDiv.className = 'border-b dark:border-gray-700 pb-4';
                 sectionDiv.innerHTML = `
-                    <h3 class="text-xl font-bold text-gray-800">${section}</h3>
-                    <div class="flex items-center gap-4 text-sm text-gray-600 mt-1 mb-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200">${section}</h3>
+                        ${owners ? `<span class="text-sm font-semibold text-gray-500 dark:text-gray-400">${owners}</span>` : ''}
+                    </div>
+                    <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1 mb-3">
                         <span>Total: <span class="font-semibold">${sectionEvents.length}</span></span>
                         <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-red-500"></div>A Fazer: <span class="font-semibold">${todoCount}</span></span>
                         <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-yellow-500"></div>Em Progresso: <span class="font-semibold">${inprogressCount}</span></span>
@@ -470,11 +543,11 @@
                     </div>
                     <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                         ${sectionEvents.map(event => {
-                            const statusColors = { todo: 'bg-red-200', inprogress: 'bg-yellow-200', done: 'bg-green-200' };
-                            const statusColor = statusColors[event.status] || 'bg-red-200';
-                            return `<li class="map-event-item cursor-pointer hover:bg-gray-200 flex items-center gap-2 p-2 bg-gray-100 rounded-md" data-event-id="${event.id}">
+                            const statusColors = { todo: 'bg-red-500', inprogress: 'bg-yellow-500', done: 'bg-green-500' };
+                            const statusColor = statusColors[event.status] || 'bg-red-500';
+                            return `<li class="map-event-item cursor-pointer hover:bg-gray-200 dark:hover:bg-zinc-800 flex items-center gap-2 p-2 bg-gray-100 dark:bg-zinc-900/50 rounded-md" data-event-id="${event.id}">
                                 <div class="w-2 h-2 rounded-full ${statusColor} flex-shrink-0"></div>
-                                <span class="text-sm text-gray-800">${event.name}</span>
+                                <span class="text-sm text-gray-800 dark:text-gray-300">${event.name}</span>
                             </li>`;
                         }).join('')}
                     </ul>
@@ -485,12 +558,13 @@
 
         const createEventCard = (event) => {
             const card = document.createElement('div');
-            card.className = 'card relative bg-white p-4 rounded-lg shadow-sm space-y-3 border-l-4'; // Added relative positioning
+            card.className = 'card relative bg-zinc-800 p-4 rounded-lg shadow-sm space-y-3 border-l-4'; // Changed base color
+            card.dataset.eventId = event.id;
             
             const priorityStyles = {
-                'Alta':  { badge: 'bg-red-100 text-red-800', border: 'border-l-red-500' },
-                'Média': { badge: 'bg-yellow-100 text-yellow-800', border: 'border-l-yellow-500' },
-                'Baixa': { badge: 'bg-gray-200 text-gray-800', border: 'border-l-gray-400' }
+                'Alta':  { badge: 'bg-red-900/50 text-red-300', border: 'border-l-red-500' },
+                'Média': { badge: 'bg-yellow-900/50 text-yellow-300', border: 'border-l-yellow-500' },
+                'Baixa': { badge: 'bg-gray-700 text-gray-300', border: 'border-l-gray-400' }
             };
             const style = priorityStyles[event.priority] || priorityStyles['Baixa'];
             card.classList.add(style.border);
@@ -499,27 +573,27 @@
             switch(event.status) {
                 case 'inprogress':
                     actionButtons = `
-                        <button title="Mover para A Fazer" class="action-btn text-gray-500 hover:text-red-600" data-action="todo"><i data-lucide="undo-2" class="w-5 h-5"></i></button>
-                        <button title="Concluir" class="action-btn text-gray-500 hover:text-green-600" data-action="done"><i data-lucide="check-circle-2" class="w-5 h-5"></i></button>
+                        <button title="Mover para A Fazer" class="action-btn text-gray-400 hover:text-red-500" data-action="todo"><i data-lucide="undo-2" class="w-5 h-5"></i></button>
+                        <button title="Concluir" class="action-btn text-gray-400 hover:text-green-500" data-action="done"><i data-lucide="check-circle-2" class="w-5 h-5"></i></button>
                     `;
                     break;
                 case 'done':
-                    actionButtons = `<button title="Mover para Em Progresso" class="action-btn text-gray-500 hover:text-yellow-600" data-action="inprogress"><i data-lucide="loader-2" class="w-5 h-5"></i></button>`;
+                    actionButtons = `<button title="Mover para Em Progresso" class="action-btn text-gray-400 hover:text-yellow-500" data-action="inprogress"><i data-lucide="loader-2" class="w-5 h-5"></i></button>`;
                     break;
                 case 'todo':
                 default:
-                    actionButtons = `<button title="Iniciar Progresso" class="action-btn text-gray-500 hover:text-yellow-600" data-action="inprogress"><i data-lucide="arrow-right-circle" class="w-5 h-5"></i></button>`;
+                    actionButtons = `<button title="Iniciar Progresso" class="action-btn text-gray-400 hover:text-yellow-500" data-action="inprogress"><i data-lucide="arrow-right-circle" class="w-5 h-5"></i></button>`;
                     break;
             }
             
             const payloadHtml = Array.isArray(event.payload) && event.payload.length > 0
                 ? `<details class="pt-2">
-                    <summary class="cursor-pointer text-sm font-semibold text-gray-700 hover:text-blue-600 flex items-center gap-1">
+                    <summary class="cursor-pointer text-sm font-semibold text-gray-300 hover:text-orange-400 flex items-center gap-1">
                         <i data-lucide="database" class="w-4 h-4"></i> Dados do Evento
                     </summary>
-                    <div class="mt-2 p-2 bg-gray-100 rounded-md text-xs text-gray-800">
+                    <div class="mt-2 p-2 bg-zinc-900 rounded-md text-xs text-gray-300">
                         <ul class="space-y-1">
-                            ${event.payload.map(p => `<li><span class="font-semibold">${p.name || 'N/A'}:</span> <span class="text-gray-600">${p.type || 'N/A'}</span></li>`).join('')}
+                            ${event.payload.map(p => `<li><span class="font-semibold">${p.name || 'N/A'}:</span> <span class="text-gray-400">${p.type || 'N/A'}</span></li>`).join('')}
                         </ul>
                     </div>
                 </details>`
@@ -528,59 +602,61 @@
             const commentsCount = Array.isArray(event.comments) ? event.comments.length : 0;
             const commentsHtml = `
                 <details class="pt-2">
-                    <summary class="cursor-pointer text-sm font-semibold text-gray-700 hover:text-blue-600 flex items-center gap-1">
+                    <summary class="cursor-pointer text-sm font-semibold text-gray-300 hover:text-orange-400 flex items-center gap-1">
                         <i data-lucide="message-square" class="w-4 h-4"></i> Comentários (${commentsCount})
                     </summary>
-                    <div class="mt-2 p-2 bg-gray-100 rounded-md text-xs text-gray-800">
+                    <div class="mt-2 p-2 bg-zinc-900 rounded-md text-xs text-gray-300">
                         <div class="comment-list space-y-2 max-h-40 overflow-y-auto mb-2">
                             ${commentsCount > 0 ? event.comments.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt)).map((c, index) => {
                                 const commentDate = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
                                 const formattedDate = !isNaN(commentDate) ? commentDate.toLocaleString('pt-BR') : 'Data inválida';
                                 return `
-                                <div class="comment-item p-2 bg-white rounded">
+                                <div class="comment-item p-2 bg-zinc-800 rounded">
                                     <div class="flex justify-between items-start">
                                         <p class="font-semibold">${c.author || 'Anônimo'}</p>
                                         <div class="flex gap-2">
-                                            <button class="edit-comment-btn text-gray-400 hover:text-blue-600" data-index="${index}"><i data-lucide="edit-3" class="w-3 h-3"></i></button>
+                                            <button class="edit-comment-btn text-gray-400 hover:text-orange-500" data-index="${index}"><i data-lucide="edit-3" class="w-3 h-3"></i></button>
                                             <button class="delete-comment-btn text-gray-400 hover:text-red-600" data-index="${index}"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                                         </div>
                                     </div>
-                                    <p class="comment-text text-gray-600">${c.text}</p>
-                                    <p class="text-gray-400 text-right text-[10px]">${formattedDate}</p>
+                                    <p class="comment-text text-gray-400">${c.text}</p>
+                                    <p class="text-gray-500 text-right text-[10px]">${formattedDate}</p>
                                 </div>
                             `}).join('') : '<p class="text-center text-gray-500 p-2">Nenhum comentário ainda.</p>'}
                         </div>
-                        <div class="flex gap-2 items-center pt-2 border-t">
-                            <input type="text" class="new-comment-input w-full px-2 py-1 border border-gray-300 rounded-md text-xs" placeholder="Adicionar comentário...">
-                            <button class="add-comment-btn bg-blue-500 text-white rounded-md p-1 hover:bg-blue-600"><i data-lucide="send" class="w-4 h-4"></i></button>
+                        <div class="flex gap-2 items-center pt-2 border-t border-zinc-700">
+                            <input type="text" class="new-comment-input w-full px-2 py-1 border border-zinc-700 rounded-md text-xs bg-zinc-700" placeholder="Adicionar comentário...">
+                            <button class="add-comment-btn bg-orange-500 text-white rounded-md p-1 hover:bg-orange-600"><i data-lucide="send" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                 </details>
             `;
 
             card.innerHTML = `
-                <input type="checkbox" class="bulk-select-checkbox absolute top-2 left-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-event-id="${event.id}">
-                <div class="pl-6"> <!-- Added padding to not overlap checkbox -->
-                    <div class="flex justify-between items-start">
-                        <p class="font-bold text-lg text-gray-900 pr-2">${event.name}</p>
+                <div class="flex justify-between items-start">
+                    <p class="font-bold text-lg text-gray-100 pr-2">${event.name}</p>
+                    <div class="flex items-center gap-2">
+                        ${event.type ? `<span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${event.type === 'Página' ? 'bg-indigo-900/50 text-indigo-300' : 'bg-pink-900/50 text-pink-300'}">${event.type}</span>` : ''}
                         <span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${style.badge} flex-shrink-0">${event.priority}</span>
                     </div>
-                    <div class="text-sm text-gray-600 space-y-1.5">
-                        <p><i data-lucide="user-circle" class="inline-block w-4 h-4 mr-2 text-gray-500"></i><span class="font-medium">${event.owner || 'N/A'}</span></p>
-                        <p><i data-lucide="layout-template" class="inline-block w-4 h-4 mr-2 text-gray-500"></i><span class="font-medium">${event.section || 'N/A'}</span></p>
-                    </div>
-                    ${payloadHtml}
-                    ${commentsHtml}
-                    <div class="flex items-center justify-end gap-3 pt-2 border-t border-gray-200 mt-3">
-                        <button title="Editar" class="edit-btn text-gray-500 hover:text-blue-600 transition-colors"><i data-lucide="edit-3" class="w-5 h-5"></i></button>
-                        ${actionButtons}
-                        <button title="Excluir" class="delete-btn text-gray-500 hover:text-red-600 transition-colors"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
-                    </div>
+                </div>
+                <div class="text-sm text-gray-400 space-y-1.5">
+                    <p><i data-lucide="user-circle" class="inline-block w-4 h-4 mr-2 text-gray-500"></i><span class="font-medium">${event.owner || 'N/A'}</span></p>
+                    <p><i data-lucide="layout-template" class="inline-block w-4 h-4 mr-2 text-gray-500"></i><span class="font-medium">${event.section || 'N/A'}</span></p>
+                </div>
+                ${payloadHtml}
+                ${commentsHtml}
+                <div class="flex items-center justify-end gap-3 pt-2 border-t border-zinc-700 mt-3">
+                    <button title="Gerar Código" class="generate-code-btn text-gray-400 hover:text-green-500 transition-colors"><i data-lucide="code" class="w-5 h-5"></i></button>
+                    <button title="Editar" class="edit-btn text-gray-400 hover:text-orange-500 transition-colors"><i data-lucide="edit-3" class="w-5 h-5"></i></button>
+                    ${actionButtons}
+                    <button title="Excluir" class="delete-btn text-gray-400 hover:text-red-500 transition-colors"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                 </div>`;
             
             card.querySelectorAll('.action-btn').forEach(btn => btn.addEventListener('click', () => updateEventStatus(event.id, btn.dataset.action)));
             card.querySelector('.delete-btn').addEventListener('click', () => openDeleteModal(event));
             card.querySelector('.edit-btn').addEventListener('click', () => openEditModal(event));
+            card.querySelector('.generate-code-btn').addEventListener('click', () => openCodeGeneratorModal(event));
             card.querySelector('.add-comment-btn').addEventListener('click', (e) => {
                 const input = e.currentTarget.previousElementSibling;
                 addComment(event.id, input.value);
@@ -594,7 +670,21 @@
 
         // --- Actions & UI Helpers ---
         const updateEventStatus = async (id, newStatus) => {
-            await updateDoc(doc(db, eventsCollectionRef.path, id), { status: newStatus });
+            const author = sessionStorage.getItem('commenterName') || 'Usuário';
+            const statusMap = {
+                todo: 'A Fazer',
+                inprogress: 'Em Progresso',
+                done: 'Feito'
+            };
+            const comment = {
+                author: 'Sistema',
+                text: `${author} moveu o evento para "${statusMap[newStatus]}".`,
+                createdAt: new Date()
+            };
+            await updateDoc(doc(db, eventsCollectionRef.path, id), { 
+                status: newStatus,
+                comments: arrayUnion(comment)
+            });
         };
         
         const addComment = async (eventId, text) => {
@@ -637,7 +727,7 @@
             const editInput = document.createElement('input');
             editInput.type = 'text';
             editInput.value = originalText;
-            editInput.className = 'w-full px-2 py-1 border border-blue-300 rounded-md text-xs';
+            editInput.className = 'w-full px-2 py-1 border border-orange-300 rounded-md text-xs bg-gray-700';
 
             const saveBtn = document.createElement('button');
             saveBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
@@ -702,6 +792,7 @@
                 name: eventNameInput.value.trim(), 
                 owner: eventOwnerInput.value.trim() || 'Não atribuído', 
                 section: eventSectionInput.value.trim() || 'N/A', 
+                type: eventTypeSelect.value,
                 priority: eventPrioritySelect.value,
                 payload: payloadData
             };
@@ -742,70 +833,13 @@
             }, 3000);
         };
 
-        // --- Data Management ---
-        const seedDatabaseWithInitialData = async () => {
-            const initialData = [
-              { "createdAt": "2025-07-22T18:08:32.424Z", "name": "Subscribe to Newsletter", "status": "todo", "priority": "Baixa", "owner": "Não atribuído", "section": "Newsletter", "payload": [{ "name": "channel", "type": "string" }] },
-              { "owner": "Daniel", "payload": [{ "type": "string", "name": "step" }, { "type": "string", "name": "shipping_method" }, { "name": "payment_method", "type": "string" }, { "name": "checkout_id", "type": "string" }], "name": "Checkout Step Viewed", "priority": "Baixa", "createdAt": "2025-07-22T17:51:09.658Z", "section": "Checkout", "status": "todo" },
-              { "payload": [{ "name": "product_id", "type": "string" }, { "type": "string", "name": "image_url" }, { "name": "name", "type": "string" }, { "name": "brand", "type": "string" }, { "type": "number", "name": "position" }, { "name": "wishlist_id", "type": "string" }, { "name": "quantity", "type": "number" }, { "type": "string", "name": "sku" }, { "name": "coupon", "type": "string" }, { "type": "string", "name": "variant" }, { "name": "wishlist_name", "type": "string" }, { "type": "string", "name": "category" }, { "name": "price", "type": "number" }, { "name": "url", "type": "string" }], "name": "Product Added to Wishlist", "section": "PDP", "status": "todo", "owner": "Não atribuído", "createdAt": "2025-07-22T17:58:32.195Z", "priority": "Baixa" },
-              { "createdAt": "2025-07-22T17:51:55.468Z", "section": "Checkout", "owner": "Daniel", "priority": "Baixa", "name": "Coupon Entered", "status": "todo", "payload": [{ "type": "string", "name": "coupon_id" }, { "name": "order_id", "type": "string" }, { "type": "string", "name": "cart_id" }] },
-              { "name": "Cart Viewed", "priority": "Baixa", "createdAt": "2025-07-22T17:46:49.999Z", "payload": [{ "name": "cart_id", "type": "string" }, { "name": "total", "type": "number" }, { "name": "products", "type": "array" }], "section": "Checkout", "status": "todo", "owner": "Daniel" },
-              { "status": "todo", "payload": [{ "name": "step", "type": "string" }, { "name": "shipping_method", "type": "string" }, { "name": "payment_method", "type": "string" }, { "type": "string", "name": "checkout_id" }], "section": "Checkout", "priority": "Baixa", "createdAt": "2025-07-22T17:49:11.593Z", "name": "Checkout Step Completed", "owner": "Daniel" },
-              { "priority": "Baixa", "section": "Wishlist", "name": "Product Removed from Wishlist", "createdAt": "2025-07-22T18:02:21.740Z", "payload": [{ "type": "string", "name": "product_id" }, { "type": "string", "name": "image_url" }, { "name": "name", "type": "string" }, { "type": "string", "name": "brand" }, { "name": "position", "type": "number" }, { "name": "wishlist_id", "type": "string" }, { "name": "quantity", "type": "number" }, { "type": "string", "name": "sku" }, { "type": "string", "name": "coupon" }, { "name": "variant", "type": "string" }, { "type": "string", "name": "wishlist_name" }, { "type": "string", "name": "category" }, { "type": "number", "name": "price" }, { "name": "url", "type": "string" }], "owner": "Não atribuído", "status": "todo" },
-              { "section": "Hotsite", "status": "todo", "priority": "Baixa", "name": "Product Clicked", "owner": "Não atribuído", "payload": [{ "name": "product_id", "type": "string" }, { "type": "string", "name": "image_url" }, { "name": "name", "type": "string" }, { "type": "string", "name": "brand" }, { "type": "number", "name": "position" }, { "name": "quantity", "type": "number" }, { "name": "sku", "type": "string" }, { "type": "string", "name": "coupon" }, { "type": "string", "name": "variant" }, { "type": "string", "name": "category" }, { "name": "price", "type": "number" }, { "type": "string", "name": "url" }], "createdAt": "2025-07-22T17:59:12.826Z" },
-              { "payload": [{ "type": "string", "name": "affiliation" }, { "name": "order_id", "type": "string" }, { "type": "string", "name": "coupon" }, { "name": "total", "type": "number" }, { "name": "products", "type": "array" }, { "type": "number", "name": "subtotal" }, { "name": "reason", "type": "string" }], "section": "Checkout", "priority": "Baixa", "name": "Checkout Failed", "owner": "Daniel", "status": "todo", "createdAt": "2025-07-22T17:48:14.499Z" },
-              { "owner": "Daniel", "createdAt": "2025-07-22T17:48:52.299Z", "priority": "Média", "status": "todo", "payload": [{ "type": "number", "name": "discount" }, { "type": "string", "name": "affiliation" }, { "type": "number", "name": "shipping" }, { "type": "string", "name": "currency" }, { "name": "order_id", "type": "string" }, { "name": "cart_id", "type": "string" }, { "type": "number", "name": "revenue" }, { "name": "tax", "type": "number" }, { "name": "coupon", "type": "string" }, { "name": "value", "type": "number" }, { "type": "array", "name": "products" }], "name": "Checkout Started", "section": "Checkout" },
-              { "payload": [{ "name": "title", "type": "string" }, { "name": "product_url", "type": "string" }, { "type": "string", "name": "product_image" }, { "name": "product_id", "type": "string" }, { "type": "string", "name": "image_url" }, { "type": "string", "name": "name" }, { "name": "brand", "type": "string" }, { "name": "cart_id", "type": "string" }, { "type": "string", "name": "sku" }, { "name": "coupon", "type": "string" }, { "type": "string", "name": "variant" }, { "name": "quantity", "type": "string" }, { "name": "category", "type": "string" }, { "name": "price", "type": "number" }, { "name": "url", "type": "string" }, { "name": "discount_price", "type": "number" }, { "type": "boolean", "name": "is_avaiable" }, { "type": "boolean", "name": "is_bundle" }, { "type": "string", "name": "added_from" }], "priority": "Alta", "status": "todo", "owner": "Não atribuído", "section": "PDP", "name": "Product Added", "createdAt": "2025-07-22T17:56:42.039Z" },
-              { "name": "Wishlist Product Added to Cart", "section": "Wishlist", "priority": "Baixa", "owner": "Não atribuído", "status": "todo", "createdAt": "2025-07-22T18:08:55.711Z", "payload": [{ "name": "product_id", "type": "string" }, { "name": "image_url", "type": "string" }, { "name": "name", "type": "string" }, { "type": "string", "name": "brand" }, { "name": "position", "type": "number" }, { "type": "string", "name": "wishlist_id" }, { "name": "quantity", "type": "number" }, { "name": "sku", "type": "string" }, { "type": "string", "name": "coupon" }, { "type": "string", "name": "variant" }, { "type": "string", "name": "wishlist_name" }, { "type": "string", "name": "category" }, { "name": "price", "type": "number" }, { "name": "url", "type": "string" }] },
-              { "priority": "Baixa", "payload": [{ "type": "number", "name": "discount" }, { "type": "number", "name": "shipping" }, { "type": "string", "name": "payment_method" }, { "name": "currency", "type": "string" }, { "type": "string", "name": "order_id" }, { "type": "number", "name": "revenue" }, { "name": "total", "type": "number" }, { "type": "number", "name": "subtotal" }, { "type": "string", "name": "checkout_id" }, { "name": "address_city", "type": "string" }, { "name": "address_state", "type": "string" }, { "name": "pix_qr_code", "type": "string" }, { "type": "string", "name": "pix_qr_code_url" }, { "name": "pix_qr_code_url_payment", "type": "string" }, { "name": "pix_qr_code_expiration", "type": "string" }, { "name": "payment_date", "type": "string" }, { "name": "installments_quantity", "type": "number" }, { "name": "installments_value", "type": "number" }, { "type": "string", "name": "origin_channel" }, { "name": "order_date", "type": "string" }, { "name": "order_situation", "type": "number" }], "section": "Checkout", "createdAt": "2025-07-22T17:54:52.755Z", "status": "todo", "owner": "Daniel", "name": "Order Placed" },
-              { "createdAt": "2025-07-22T18:07:16.741Z", "status": "todo", "owner": "Não atribuído", "section": "Sacola", "priority": "Baixa", "payload": [{ "name": "recipient", "type": "string" }, { "name": "share_message", "type": "string" }, { "name": "cart_id", "type": "string" }, { "type": "string", "name": "share_via" }], "name": "Shared Cart" },
-              { "status": "todo", "createdAt": "2025-07-22T17:51:38.128Z", "name": "Coupon Applied", "owner": "Daniel", "section": "Checkout", "payload": [{ "name": "discount", "type": "number" }, { "name": "coupon_id", "type": "string" }, { "name": "order_id", "type": "string" }, { "type": "string", "name": "cart_id" }, { "name": "coupon_name", "type": "string" }], "priority": "Baixa" },
-              { "priority": "Alta", "status": "todo", "comments": [], "section": "Sacola", "payload": [{ "type": "string", "name": "product_id" }, { "name": "image_url", "type": "string" }, { "type": "string", "name": "name" }, { "name": "brand", "type": "string" }, { "name": "position", "type": "number" }, { "name": "quantity", "type": "number" }, { "name": "cart_id", "type": "string" }, { "name": "sku", "type": "string" }, { "type": "string", "name": "coupon" }, { "type": "string", "name": "variant" }, { "type": "string", "name": "category" }, { "name": "price", "type": "number" }, { "name": "url", "type": "string" }], "owner": "Não atribuído", "name": "Product Removed", "createdAt": "2025-07-22T18:01:47.193Z" },
-              { "section": "Cadastro", "status": "todo", "payload": [{ "name": "error_description", "type": "string" }], "owner": "Não atribuído", "createdAt": "2025-07-22T18:07:55.276Z", "priority": "Baixa", "name": "Sign Up Completed" },
-              { "owner": "Não atribuído", "name": "Sign Up Started", "section": "Cadastro", "payload": [{ "type": "string", "name": "channel" }], "status": "todo", "priority": "Baixa", "createdAt": "2025-07-22T18:08:12.845Z" },
-              { "section": "Hotsite", "owner": "Não atribuído", "priority": "Média", "status": "todo", "createdAt": "2025-07-22T18:00:09.316Z", "payload": [{ "name": "category", "type": "string" }, { "type": "array", "name": "sorts" }, { "type": "string", "name": "list_id" }, { "type": "array", "name": "products" }, { "type": "array", "name": "filters" }], "name": "Product List Filtered" },
-              { "payload": [{ "type": "string", "name": "title" }, { "name": "product_url", "type": "string" }, { "type": "string", "name": "product_image" }, { "name": "product_id", "type": "string" }, { "type": "string", "name": "image_url" }, { "type": "string", "name": "name" }, { "name": "brand", "type": "string" }, { "name": "currency", "type": "string" }, { "type": "number", "name": "quantity" }, { "type": "string", "name": "sku" }, { "name": "coupon", "type": "string" }, { "type": "string", "name": "variant" }, { "name": "category", "type": "string" }, { "name": "price", "type": "number" }, { "name": "url", "type": "string" }, { "type": "number", "name": "discount_price" }, { "type": "boolean", "name": "is_avaiable" }, { "name": "is_bundle", "type": "boolean" }, { "name": "treatment", "type": "string" }], "name": "Product Viewed", "createdAt": "2025-07-22T18:05:51.748Z", "status": "todo", "owner": "Não atribuído", "section": "PDP", "priority": "Alta" },
-              { "section": "PDP", "owner": "Não atribuído", "name": "Product Reviewed", "createdAt": "2025-07-22T18:02:43.350Z", "payload": [{ "name": "product_id", "type": "string" }, { "type": "string", "name": "review_id" }, { "type": "string", "name": "rating" }, { "name": "review_body", "type": "string" }], "status": "todo", "priority": "Baixa" },
-              { "status": "todo", "owner": "Daniel", "priority": "Baixa", "createdAt": "2025-07-22T17:55:58.668Z", "payload": [{ "type": "string", "name": "channel" }, { "name": "affiliation", "type": "string" }, { "type": "string", "name": "order_id" }, { "type": "string", "name": "cart_id" }], "name": "Personal Info", "section": "Checkout" },
-              { "name": "Shipment Info", "owner": "Daniel", "payload": [{ "name": "affiliation", "type": "string" }, { "name": "checkout_id", "type": "string" }, { "name": "address_city", "type": "string" }, { "type": "string", "name": "address_state" }], "priority": "Baixa", "section": "Checkout", "status": "todo", "createdAt": "2025-07-22T18:07:35.743Z" },
-              { "createdAt": "2025-07-22T18:03:05.874Z", "payload": [{ "name": "product_id", "type": "string" }, { "name": "recipient", "type": "string" }, { "type": "string", "name": "image_url" }, { "type": "string", "name": "name" }, { "type": "string", "name": "brand" }, { "name": "share_message", "type": "string" }, { "name": "sku", "type": "string" }, { "name": "variant", "type": "string" }, { "name": "category", "type": "string" }, { "name": "price", "type": "number" }, { "type": "string", "name": "share_via" }, { "type": "string", "name": "url" }], "status": "todo", "section": "Sacola", "priority": "Baixa", "owner": "Não atribuído", "name": "Product Shared" },
-              { "createdAt": "2025-07-22T18:06:21.905Z", "owner": "Não atribuído", "status": "todo", "payload": [{ "name": "channel", "type": "string" }], "name": "Session Login", "section": "Login", "priority": "Baixa" },
-              { "owner": "Daniel", "section": "Checkout", "createdAt": "2025-07-22T17:55:12.155Z", "priority": "Baixa", "name": "Order Updated", "payload": [{ "type": "number", "name": "discount" }, { "name": "affiliation", "type": "string" }, { "type": "number", "name": "shipping" }, { "name": "currency", "type": "string" }, { "name": "order_id", "type": "string" }, { "name": "revenue", "type": "number" }, { "name": "tax", "type": "number" }, { "name": "coupon", "type": "string" }, { "name": "total", "type": "number" }, { "type": "array", "name": "products" }], "status": "todo" },
-              { "payload": [{ "type": "number", "name": "discount" }, { "type": "string", "name": "affiliation" }, { "name": "shipping", "type": "number" }, { "type": "string", "name": "payment_method" }, { "name": "currency", "type": "string" }, { "type": "string", "name": "order_id" }, { "type": "number", "name": "revenue" }, { "type": "number", "name": "total" }, { "name": "subtotal", "type": "number" }, { "name": "checkout_id", "type": "string" }, { "type": "string", "name": "address_city" }, { "name": "address_state", "type": "string" }, { "type": "string", "name": "payment_date" }, { "name": "installments_quantity", "type": "number" }, { "name": "installments_value", "type": "number" }, { "type": "string", "name": "origin_channel" }, { "name": "order_date", "type": "string" }, { "name": "order_situation", "type": "number" }], "status": "todo", "priority": "Baixa", "owner": "Daniel", "createdAt": "2025-07-22T17:52:12.862Z", "section": "Checkout", "name": "Order Cancelled" },
-              { "createdAt": "2025-07-22T17:54:34.623Z", "owner": "Daniel", "name": "Order Completed", "priority": "Baixa", "status": "todo", "payload": [{ "name": "discount", "type": "number" }, { "type": "number", "name": "shipping" }, { "type": "string", "name": "payment_method" }, { "type": "string", "name": "currency" }, { "type": "string", "name": "order_id" }, { "type": "number", "name": "revenue" }, { "type": "string", "name": "coupon" }, { "type": "number", "name": "total" }, { "name": "products", "type": "array" }, { "name": "subtotal", "type": "number" }, { "name": "checkout_id", "type": "string" }, { "name": "address_city", "type": "string" }, { "name": "address_state", "type": "string" }, { "type": "string", "name": "pix_qr_code" }, { "name": "pix_qr_code_url", "type": "string" }, { "type": "string", "name": "pix_qr_code_url_payment" }, { "name": "pix_qr_code_expiration", "type": "string" }, { "name": "payment_date", "type": "string" }, { "name": "installments_quantity", "type": "number" }, { "name": "installments_value", "type": "number" }, { "type": "string", "name": "origin_channel" }, { "type": "string", "name": "order_date" }, { "name": "order_situation", "type": "number" }], "section": "Checkout" },
-              { "section": "Checkout", "owner": "Daniel", "createdAt": "2025-07-22T17:55:32.720Z", "status": "todo", "priority": "Baixa", "name": "Payment Info", "payload": [{ "type": "string", "name": "channel" }, { "type": "string", "name": "affiliation" }, { "name": "payment_method", "type": "string" }, { "name": "order_id", "type": "string" }, { "type": "string", "name": "checkout_id" }, { "type": "number", "name": "installments_quantity" }, { "type": "number", "name": "installments_value" }] },
-              { "name": "Product List Viewed", "section": "Hotsite", "status": "todo", "owner": "Não atribuído", "createdAt": "2025-07-22T18:00:53.107Z", "priority": "Baixa", "payload": [{ "type": "string", "name": "category" }, { "type": "string", "name": "list_id" }, { "name": "products", "type": "array" }] },
-              { "createdAt": "2025-07-22T18:04:12.232Z", "payload": [{ "name": "query", "type": "string" }], "owner": "Não atribuído", "name": "Products Searched", "status": "todo", "priority": "Baixa", "section": "Busca" }
-            ];
-            
-            showToast("Carregando dados iniciais...");
-            const uploadBatch = writeBatch(db);
-            initialData.forEach(eventData => {
-                const newDocRef = doc(eventsCollectionRef);
-                if (eventData.createdAt) {
-                    eventData.createdAt = new Date(eventData.createdAt);
-                }
-                if (Array.isArray(eventData.comments)) {
-                    eventData.comments.forEach(c => {
-                        if(c.createdAt) c.createdAt = new Date(c.createdAt);
-                    });
-                } else {
-                    eventData.comments = [];
-                }
-                uploadBatch.set(newDocRef, eventData);
-            });
-            await uploadBatch.commit();
-            showToast("Planilha inicializada com sucesso!");
-        };
-
-
         // --- Modal Handling & Parser ---
         const addPayloadRow = (name = '', type = 'string') => {
             const row = document.createElement('div');
             row.className = 'payload-row flex items-center gap-2';
             row.innerHTML = `
-                <input type="text" class="payload-name w-full px-3 py-1 border border-gray-300 rounded-md" placeholder="Nome da Propriedade" value="${name}">
-                <select class="payload-type form-select w-full px-3 py-1 border border-gray-300 rounded-md bg-white">
+                <input type="text" class="payload-name w-full px-3 py-1 border border-gray-600 rounded-md bg-gray-700" placeholder="Nome da Propriedade" value="${name}">
+                <select class="payload-type form-select w-full px-3 py-1 border border-gray-600 rounded-md bg-gray-700">
                     <option value="string" ${type === 'string' ? 'selected' : ''}>String</option>
                     <option value="number" ${type === 'number' ? 'selected' : ''}>Number</option>
                     <option value="boolean" ${type === 'boolean' ? 'selected' : ''}>Boolean</option>
@@ -835,12 +869,11 @@
                 if (!objectMatch) throw new Error("Objeto de propriedades não encontrado.");
 
                 let objectStr = objectMatch[1];
-                // Remove comments
-                objectStr = objectStr.replace(/\/\/.*/g, '');
-                // Add quotes to keys
-                objectStr = objectStr.replace(/(\w+)\s*:/g, '"$1":');
-                // Fix trailing commas
-                objectStr = objectStr.replace(/,\s*([}\]])/g, '$1');
+                // A safer way to parse JS objects into JSON
+                // This is a simplified parser and might not cover all edge cases
+                objectStr = objectStr.replace(/(\w+)\s*:/g, '"$1":'); // Quote keys
+                objectStr = objectStr.replace(/'/g, '"'); // Replace single quotes
+                objectStr = objectStr.replace(/,\s*([}\]])/g, '$1'); // Remove trailing commas
 
                 const properties = JSON.parse(objectStr);
 
@@ -853,7 +886,7 @@
                     if (Array.isArray(value)) {
                         type = 'array';
                     } else if (type === 'object' && value !== null) {
-                        type = 'object'; // Could be more specific, but 'object' is a safe default
+                        type = 'object'; 
                     }
                     addPayloadRow(key, type);
                 }
@@ -873,7 +906,6 @@
         const openEventModal = () => eventModal.classList.add('visible');
         const closeEventModal = () => {
             eventModal.classList.remove('visible');
-            // Ensure form is visible and parser is hidden when closing
             parserView.classList.add('hidden');
             eventForm.classList.remove('hidden');
         }
@@ -898,6 +930,7 @@
             eventNameInput.value = event.name; 
             eventOwnerInput.value = event.owner; 
             eventSectionInput.value = event.section; 
+            eventTypeSelect.value = event.type || 'Página';
             eventPrioritySelect.value = event.priority; 
             openEventModal(); 
         };
@@ -908,55 +941,39 @@
         };
         const closeDeleteModal = () => deleteModal.classList.remove('visible');
 
-        // --- Bulk Edit ---
-        const updateBulkActionsBar = () => {
-            const count = selectedEvents.size;
-            if (count > 0) {
-                bulkSelectedCount.textContent = `${count} evento(s) selecionado(s)`;
-                bulkActionsBar.classList.remove('hidden');
-                bulkActionsBar.classList.remove('translate-y-full');
-            } else {
-                bulkActionsBar.classList.add('translate-y-full');
-                setTimeout(() => bulkActionsBar.classList.add('hidden'), 300);
-            }
-        };
+        const openCodeGeneratorModal = (event) => {
+            const camelCaseName = event.name.replace(/\s(.)/g, (match, group1) => group1.toUpperCase()).replace(/\s/g, '');
+            const propertiesMap = (event.payload || []).map(p => `      ${p.name}: rawData.${p.name} || null, // ${p.type}`).join('\n');
+            const code = `
+/**
+ * Mapeia os dados brutos para as propriedades do evento "${event.name}".
+ * @param {object} rawData - O objeto de dados original (ex: vindo de uma API).
+ * @returns {object} - Um objeto com as propriedades formatadas.
+ */
+function get${camelCaseName}Properties(rawData) {
+  return {
+${propertiesMap}
+  };
+}
 
-        const handleBulkEdit = async (e) => {
-            e.preventDefault();
-            const updateData = {};
-            const newOwner = document.getElementById('bulkOwnerInput').value.trim();
-            const newSection = document.getElementById('bulkSectionInput').value.trim();
-            const newPriority = document.getElementById('bulkPrioritySelect').value;
-            const newStatus = document.getElementById('bulkStatusSelect').value;
+/**
+ * Dispara o evento "${event.name}".
+ * @param {object} rawData - O objeto de dados original para ser mapeado.
+ */
+function track${camelCaseName}(rawData) {
+  trackEvent({
+    id: "${camelCaseName}",
+    eventName: "${event.name}",
+    properties: get${camelCaseName}Properties(rawData),
+  });
+}
 
-            if (newOwner) updateData.owner = newOwner;
-            if (newSection) updateData.section = newSection;
-            if (newPriority) updateData.priority = newPriority;
-            if (newStatus) updateData.status = newStatus;
-
-            if (Object.keys(updateData).length === 0) {
-                showToast("Nenhuma alteração foi feita.");
-                return;
-            }
-
-            const batch = writeBatch(db);
-            selectedEvents.forEach(eventId => {
-                const docRef = doc(db, eventsCollectionRef.path, eventId);
-                batch.update(docRef, updateData);
-            });
-
-            try {
-                await batch.commit();
-                showToast(`${selectedEvents.size} evento(s) atualizado(s) com sucesso!`);
-            } catch (error) {
-                console.error("Erro na edição em massa:", error);
-                showToast("Ocorreu um erro ao atualizar os eventos.");
-            } finally {
-                selectedEvents.clear();
-                document.querySelectorAll('.bulk-select-checkbox').forEach(cb => cb.checked = false);
-                updateBulkActionsBar();
-                bulkEditModal.classList.remove('visible');
-            }
+// Exemplo de como usar:
+// const eventData = { /* ...seus dados aqui... */ };
+// track${camelCaseName}(eventData);
+`;
+            generatedCode.textContent = code.trim();
+            codeGeneratorModal.classList.add('visible');
         };
 
         // --- Event Listeners ---
@@ -981,20 +998,36 @@
         });
         parseCodeBtn.addEventListener('click', parseAndFillForm);
 
-        // View Toggle Listeners
-        kanbanViewBtn.addEventListener('click', () => {
+        // FIX: Added preventDefault to view toggle listeners
+        kanbanViewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             kanbanView.classList.remove('hidden');
             kanbanControls.classList.remove('hidden');
             eventMapView.classList.add('hidden');
+            readmeView.classList.add('hidden');
             kanbanViewBtn.classList.add('active');
             mapViewBtn.classList.remove('active');
+            readmeViewBtn.classList.remove('active');
         });
-        mapViewBtn.addEventListener('click', () => {
+        mapViewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             kanbanView.classList.add('hidden');
             kanbanControls.classList.add('hidden');
             eventMapView.classList.remove('hidden');
+            readmeView.classList.add('hidden');
             kanbanViewBtn.classList.remove('active');
             mapViewBtn.classList.add('active');
+            readmeViewBtn.classList.remove('active');
+        });
+        readmeViewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            kanbanView.classList.add('hidden');
+            kanbanControls.classList.add('hidden');
+            eventMapView.classList.add('hidden');
+            readmeView.classList.remove('hidden');
+            kanbanViewBtn.classList.remove('active');
+            mapViewBtn.classList.remove('active');
+            readmeViewBtn.classList.add('active');
         });
         
         // Map View Click Listener
@@ -1009,24 +1042,28 @@
             }
         });
         
-        // Bulk Edit Listeners
-        kanbanView.addEventListener('change', (e) => {
-            if (e.target.classList.contains('bulk-select-checkbox')) {
-                const eventId = e.target.dataset.eventId;
-                if (e.target.checked) {
-                    selectedEvents.add(eventId);
-                } else {
-                    selectedEvents.delete(eventId);
-                }
-                updateBulkActionsBar();
+        // Code Generator Listeners
+        closeCodeModalBtn.addEventListener('click', () => codeGeneratorModal.classList.remove('visible'));
+        copyCodeBtn.addEventListener('click', () => {
+            // Use a fallback for clipboard API for broader compatibility
+            const codeToCopy = generatedCode.textContent;
+            try {
+                navigator.clipboard.writeText(codeToCopy).then(() => {
+                    showToast('Código copiado!');
+                }, () => { // Fallback for environments where writeText is not available
+                    const textArea = document.createElement('textarea');
+                    textArea.value = codeToCopy;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showToast('Código copiado!');
+                });
+            } catch (err) {
+                console.error('Could not copy text: ', err);
+                showToast('Erro ao copiar código.');
             }
         });
-        openBulkEditBtn.addEventListener('click', () => {
-            bulkEditForm.reset();
-            bulkEditModal.classList.add('visible');
-        });
-        cancelBulkEditBtn.addEventListener('click', () => bulkEditModal.classList.remove('visible'));
-        bulkEditForm.addEventListener('submit', handleBulkEdit);
 
 
         // --- Initial Load ---
