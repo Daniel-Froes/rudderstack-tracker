@@ -63,10 +63,54 @@
             color: #f97316;
             border-bottom-color: #f97316;
         }
-        /* FIX: Added styles for code wrapping in the generator modal */
         #generatedCode {
-            white-space: pre-wrap;   /* Wraps the text content */
-            word-wrap: break-word;   /* Breaks long words to prevent overflow */
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* FIX: Dracula Theme for Code Blocks */
+        pre {
+            background-color: #282a36; /* Dracula Background */
+            color: #f8f8f2;           /* Dracula Foreground */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        }
+        pre code {
+            font-family: inherit;
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            border-radius: 0;
+        }
+        /* Simple syntax-like highlighting */
+        .token.comment, .token.prolog, .token.doctype, .token.cdata {
+            color: #6272a4; /* Dracula Comment */
+        }
+        .token.punctuation {
+            color: #f8f8f2; /* Dracula Foreground */
+        }
+        .token.property, .token.tag, .token.constant, .token.symbol, .token.deleted {
+            color: #ff79c6; /* Dracula Pink */
+        }
+        .token.boolean, .token.number {
+            color: #bd93f9; /* Dracula Purple */
+        }
+        .token.selector, .token.attr-name, .token.string, .token.char, .token.builtin, .token.inserted {
+            color: #50fa7b; /* Dracula Green */
+        }
+        .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string, .token.variable {
+            color: #f8f8f2; /* Dracula Foreground */
+        }
+        .token.atrule, .token.attr-value, .token.function, .token.class-name {
+            color: #f1fa8c; /* Dracula Yellow */
+        }
+        .token.keyword {
+            color: #ff79c6; /* Dracula Pink */
+        }
+        .token.regex, .token.important {
+            color: #ffb86c; /* Dracula Orange */
         }
     </style>
 </head>
@@ -165,7 +209,7 @@
                     <div>
                         <h3 class="text-xl font-semibold">1. A Função `trackEvent` Genérica</h3>
                         <p class="mt-2 text-gray-400">A base de tudo é uma função genérica `trackEvent`. Você deve ter uma função similar no seu projeto. Ela é responsável por se comunicar com o RudderStack.</p>
-                        <pre class="mt-2 bg-zinc-800 p-4 rounded-lg text-sm overflow-x-auto"><code class="language-javascript">async function trackEvent(eventData) {
+                        <pre class="mt-2 text-sm"><code class="language-javascript">async function trackEvent(eventData) {
   const eventId = eventData.id || `${eventData.eventName}-${JSON.stringify(eventData.properties)}`;
   
   if (window.rudderanalytics && typeof window.rudderanalytics.track === "function") {
@@ -190,7 +234,7 @@
                     <div>
                         <h3 class="text-xl font-semibold">3. Exemplo de Código Gerado</h3>
                         <p class="mt-2 text-gray-400">Para um evento "Checkout Started", o código gerado será parecido com este:</p>
-                        <pre class="mt-2 bg-zinc-800 p-4 rounded-lg text-sm overflow-x-auto"><code class="language-javascript">/**
+                        <pre class="mt-2 text-sm"><code class="language-javascript">/**
  * Mapeia os dados brutos para as propriedades do evento "Checkout Started".
  * @param {object} rawData - O objeto de dados original (ex: vindo de uma API).
  * @returns {object} - Um objeto com as propriedades formatadas.
@@ -313,14 +357,12 @@ function trackCheckoutStarted(rawData) {
     
     <!-- Code Generator Modal -->
     <div id="codeGeneratorModal" class="modal-backdrop">
-        <!-- FIX: Make the modal content a flex column with a max height -->
         <div class="modal-content flex flex-col max-h-[85vh]">
             <h2 class="text-2xl font-bold mb-4 flex-shrink-0">Gerador de Código</h2>
             <p class="text-sm text-gray-400 mb-4 flex-shrink-0">Copie e cole este código em seu projeto para disparar o evento.</p>
             
-            <!-- FIX: This div will contain the pre block and will be the scrollable area -->
-            <div class="flex-grow overflow-auto bg-zinc-900 rounded-lg">
-                 <pre class="p-4 text-sm"><code id="generatedCode" class="language-javascript"></code></pre>
+            <div class="flex-grow overflow-auto rounded-lg">
+                 <pre class="text-sm"><code id="generatedCode" class="language-javascript"></code></pre>
             </div>
 
             <div class="mt-6 flex justify-end gap-4 flex-shrink-0">
