@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         html.dark { color-scheme: dark; }
         body { font-family: 'Inter', sans-serif; }
@@ -101,6 +102,31 @@
             background-color: #f97316; /* orange-500 */
             color: #ffffff;
         }
+        
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #report-content, #report-content * {
+                visibility: visible;
+            }
+            #report-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+             body {
+                background-color: #ffffff;
+            }
+            .print-text-black {
+                color: #000000 !important;
+            }
+             .print-bg-white {
+                background-color: #ffffff !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-zinc-900 text-gray-200">
@@ -112,18 +138,36 @@
                     <i data-lucide="layout-template" class="text-orange-500"></i>
                     <span class="font-bold text-xl">Event Tracker</span>
                 </div>
-                <div class="flex items-center gap-2 bg-zinc-800 px-3 py-1 rounded-full">
+                <div class="hidden md:flex items-center gap-2 bg-zinc-800 px-3 py-1 rounded-full">
                      <span class="text-xs font-mono text-zinc-400">Sheet ID:</span>
                      <span id="appIdDisplay" class="text-xs font-mono text-orange-400">Carregando...</span>
                 </div>
             </div>
-            <div id="nav-links" class="flex items-center gap-6">
-                <a href="#kanban" id="kanbanViewBtn" class="nav-link active text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Kanban</a>
-                <a href="#map" id="mapViewBtn" class="nav-link text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Mapa de Eventos</a>
-                <a href="#snippet-generator" id="snippetGeneratorViewBtn" class="nav-link text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Gerador de Snippet</a>
-                <a href="#readme" id="readmeViewBtn" class="nav-link text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Como Usar</a>
+            <!-- Desktop Nav -->
+            <div id="nav-links" class="hidden md:flex items-center gap-6">
+                <a href="#dashboard" class="nav-link text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Dashboard</a>
+                <a href="#kanban" class="nav-link active text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Kanban</a>
+                <a href="#map" class="nav-link text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Mapa de Eventos</a>
+                <a href="#snippet-generator" class="nav-link text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Gerador de Snippet</a>
+                <a href="#report" class="nav-link text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Relatório</a>
+                <a href="#readme" class="nav-link text-gray-400 hover:text-orange-500 font-semibold border-b-2 border-transparent transition-colors">Como Usar</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden">
+                <button id="mobile-menu-button">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
             </div>
         </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#dashboard" class="nav-link block py-2 px-4 text-sm hover:bg-zinc-700">Dashboard</a>
+            <a href="#kanban" class="nav-link block py-2 px-4 text-sm hover:bg-zinc-700">Kanban</a>
+            <a href="#map" class="nav-link block py-2 px-4 text-sm hover:bg-zinc-700">Mapa de Eventos</a>
+            <a href="#snippet-generator" class="nav-link block py-2 px-4 text-sm hover:bg-zinc-700">Gerador de Snippet</a>
+            <a href="#report" class="nav-link block py-2 px-4 text-sm hover:bg-zinc-700">Relatório</a>
+            <a href="#readme" class="nav-link block py-2 px-4 text-sm hover:bg-zinc-700">Como Usar</a>
+        </div>
     </header>
 
     <!-- Main App Container -->
@@ -151,6 +195,59 @@
 
         <!-- Views Container -->
         <div id="views-container">
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-zinc-800 p-6 rounded-xl flex items-center gap-4">
+                        <i data-lucide="list-checks" class="w-10 h-10 text-orange-400"></i>
+                        <div>
+                            <p class="text-sm text-zinc-400">Eventos Totais</p>
+                            <p id="total-events-stat" class="text-3xl font-bold">0</p>
+                        </div>
+                    </div>
+                     <div class="bg-zinc-800 p-6 rounded-xl flex items-center gap-4">
+                        <i data-lucide="list" class="w-10 h-10 text-red-500"></i>
+                        <div>
+                            <p class="text-sm text-zinc-400">A Fazer</p>
+                            <p id="todo-events-stat" class="text-3xl font-bold">0</p>
+                        </div>
+                    </div>
+                     <div class="bg-zinc-800 p-6 rounded-xl flex items-center gap-4">
+                        <i data-lucide="loader-2" class="w-10 h-10 text-yellow-500"></i>
+                        <div>
+                            <p class="text-sm text-zinc-400">Em Progresso</p>
+                            <p id="inprogress-events-stat" class="text-3xl font-bold">0</p>
+                        </div>
+                    </div>
+                     <div class="bg-zinc-800 p-6 rounded-xl flex items-center gap-4">
+                        <i data-lucide="check-circle-2" class="w-10 h-10 text-green-500"></i>
+                        <div>
+                            <p class="text-sm text-zinc-400">Feitos</p>
+                            <p id="done-events-stat" class="text-3xl font-bold">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-zinc-800 p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold mb-4">Eventos por Status</h3>
+                        <canvas id="status-chart"></canvas>
+                    </div>
+                    <div class="bg-zinc-800 p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold mb-4">Eventos por Prioridade</h3>
+                        <canvas id="priority-chart"></canvas>
+                    </div>
+                    <div class="bg-zinc-800 p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold mb-4">Eventos por Responsável</h3>
+                        <ul id="owner-summary-list" class="space-y-2 max-h-64 overflow-y-auto"></ul>
+                    </div>
+                    <div class="bg-zinc-800 p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold mb-4">Eventos por Seção</h3>
+                        <ul id="section-summary-list" class="space-y-2 max-h-64 overflow-y-auto"></ul>
+                    </div>
+                </div>
+            </div>
+
             <!-- Kanban View -->
             <div id="kanban-view" class="view">
                 <!-- Progress and Sort -->
@@ -235,6 +332,44 @@
                                 <button id="copySnippetCodeBtn" class="absolute top-2 right-2 bg-zinc-700 hover:bg-zinc-600 text-gray-300 p-2 rounded-lg" title="Copiar Código">
                                     <i data-lucide="copy" class="w-5 h-5"></i>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report View -->
+            <div id="report-view" class="view hidden">
+                <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-xl shadow-sm max-w-4xl mx-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-3xl font-bold text-orange-500">Relatório de Implementação</h2>
+                        <button id="printReportBtn" class="bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2">
+                            <i data-lucide="printer" class="w-5 h-5"></i> Imprimir / Salvar PDF
+                        </button>
+                    </div>
+
+                    <div id="report-content" class="print-bg-white print-text-black p-8 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-6 print-text-black">Resumo de Eventos Concluídos</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="text-center">
+                                <canvas id="completion-chart" width="150" height="150"></canvas>
+                            </div>
+                            <div class="md:col-span-2 grid grid-cols-2 gap-4">
+                                <div class="bg-zinc-800 print-bg-white p-4 rounded-lg">
+                                    <p class="text-sm text-zinc-400 print-text-black">Total de Eventos</p>
+                                    <p id="report-total" class="text-2xl font-bold">0</p>
+                                </div>
+                                <div class="bg-zinc-800 print-bg-white p-4 rounded-lg">
+                                    <p class="text-sm text-zinc-400 print-text-black">Eventos Concluídos</p>
+                                    <p id="report-done" class="text-2xl font-bold text-green-500">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-xl font-semibold mb-4 print-text-black">Lista de Eventos Concluídos</h4>
+                            <div id="completed-events-list" class="space-y-3">
+                                <!-- Completed events will be listed here -->
                             </div>
                         </div>
                     </div>
@@ -504,11 +639,11 @@ window.trackProductViewed = trackProductViewed;
         const commenterNameInput = document.getElementById('commenterNameInput');
         const saveNameBtn = document.getElementById('saveNameBtn');
         // View Toggle
-        const kanbanViewBtn = document.getElementById('kanbanViewBtn');
-        const mapViewBtn = document.getElementById('mapViewBtn');
-        const readmeViewBtn = document.getElementById('readmeViewBtn');
+        const navLinksContainer = document.getElementById('nav-links');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
         const kanbanView = document.getElementById('kanban-view');
-        const eventMapView = document.getElementById('map-view'); // FIX: Corrected ID
+        const eventMapView = document.getElementById('map-view');
         const readmeView = document.getElementById('readme-view');
         const kanbanControls = document.getElementById('kanban-controls');
         const controlsToolbar = document.getElementById('controls-toolbar');
@@ -518,7 +653,6 @@ window.trackProductViewed = trackProductViewed;
         const copyCodeBtn = document.getElementById('copyCodeBtn');
         const closeCodeModalBtn = document.getElementById('closeCodeModalBtn');
         // Snippet Generator Elements
-        const snippetGeneratorViewBtn = document.getElementById('snippetGeneratorViewBtn');
         const snippetGeneratorView = document.getElementById('snippet-generator-view');
         const snippetEventName = document.getElementById('snippetEventName');
         const snippetElementId = document.getElementById('snippetElementId');
@@ -534,6 +668,20 @@ window.trackProductViewed = trackProductViewed;
         const importCardSearch = document.getElementById('importCardSearch');
         const cancelImportBtn = document.getElementById('cancelImportBtn');
         const importFilterContainer = document.getElementById('import-filter-container');
+        // Dashboard Elements
+        const dashboardView = document.getElementById('dashboard-view');
+        const totalEventsStat = document.getElementById('total-events-stat');
+        const todoEventsStat = document.getElementById('todo-events-stat');
+        const inprogressEventsStat = document.getElementById('inprogress-events-stat');
+        const doneEventsStat = document.getElementById('done-events-stat');
+        const ownerSummaryList = document.getElementById('owner-summary-list');
+        const sectionSummaryList = document.getElementById('section-summary-list');
+        // Report Elements
+        const reportView = document.getElementById('report-view');
+        const printReportBtn = document.getElementById('printReportBtn');
+        const reportTotal = document.getElementById('report-total');
+        const reportDone = document.getElementById('report-done');
+        const completedEventsList = document.getElementById('completed-events-list');
 
 
         // --- App State ---
@@ -543,6 +691,9 @@ window.trackProductViewed = trackProductViewed;
         let allEvents = [];
         let unsubscribe;
         let currentImportStatusFilter = 'all';
+        let statusChart = null;
+        let priorityChart = null;
+        let completionChart = null;
 
         // --- App Initialization ---
         const handleAppLoad = () => {
@@ -584,6 +735,8 @@ window.trackProductViewed = trackProductViewed;
                 allEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderEvents();
                 renderEventMap();
+                renderDashboard();
+                renderReport();
             });
         };
 
@@ -1120,32 +1273,33 @@ function track${camelCaseName}(rawData) {
         });
         parseCodeBtn.addEventListener('click', parseAndFillForm);
 
-        // View toggle listeners
-        const navLinks = document.querySelectorAll('.nav-link');
+        // --- Navigation Logic ---
+        const allNavLinks = document.querySelectorAll('.nav-link');
         const views = document.querySelectorAll('.view');
 
-        navLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const targetId = link.getAttribute('href').substring(1);
+        const handleNavClick = (e) => {
+            e.preventDefault();
+            const targetId = e.currentTarget.getAttribute('href').substring(1);
 
-                navLinks.forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-
-                views.forEach(view => {
-                    if (view.id === `${targetId}-view`) {
-                        view.classList.remove('hidden');
-                    } else {
-                        view.classList.add('hidden');
-                    }
-                });
-                
-                if (targetId === 'snippet-generator' || targetId === 'readme') {
-                    controlsToolbar.classList.add('hidden');
-                } else {
-                    controlsToolbar.classList.remove('hidden');
-                }
+            allNavLinks.forEach(l => {
+                const linkTargetId = l.getAttribute('href').substring(1);
+                l.classList.toggle('active', linkTargetId === targetId);
             });
+
+            views.forEach(view => {
+                view.classList.toggle('hidden', view.id !== `${targetId}-view`);
+            });
+            
+            controlsToolbar.classList.toggle('hidden', ['snippet-generator', 'readme', 'dashboard', 'report'].includes(targetId));
+            
+            mobileMenu.classList.add('hidden'); // Close mobile menu on click
+        };
+
+        allNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
+        mobileMenu.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', handleNavClick));
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
         });
         
         // Map View Click Listener
@@ -1400,6 +1554,161 @@ window.${functionName} = ${functionName};
 
             document.body.removeChild(textArea);
         };
+
+        // --- Dashboard & Report Logic ---
+        const renderDashboard = () => {
+            if (!allEvents) return;
+
+            const todoCount = allEvents.filter(e => (e.status || 'todo') === 'todo').length;
+            const inprogressCount = allEvents.filter(e => e.status === 'inprogress').length;
+            const doneCount = allEvents.filter(e => e.status === 'done').length;
+
+            totalEventsStat.textContent = allEvents.length;
+            todoEventsStat.textContent = todoCount;
+            inprogressEventsStat.textContent = inprogressCount;
+            doneEventsStat.textContent = doneCount;
+
+            // Group data
+            const ownerCounts = allEvents.reduce((acc, e) => {
+                const owner = e.owner || 'Não atribuído';
+                acc[owner] = (acc[owner] || 0) + 1;
+                return acc;
+            }, {});
+            
+            const sectionCounts = allEvents.reduce((acc, e) => {
+                const section = e.section || 'N/A';
+                acc[section] = (acc[section] || 0) + 1;
+                return acc;
+            }, {});
+
+             const priorityCounts = allEvents.reduce((acc, e) => {
+                const priority = e.priority || 'Baixa';
+                acc[priority] = (acc[priority] || 0) + 1;
+                return acc;
+            }, {});
+
+            // Render lists
+            ownerSummaryList.innerHTML = Object.entries(ownerCounts).map(([name, count]) => `<li class="flex justify-between items-center bg-zinc-700/50 p-2 rounded-md"><span>${name}</span><span class="font-bold text-orange-400">${count}</span></li>`).join('');
+            sectionSummaryList.innerHTML = Object.entries(sectionCounts).map(([name, count]) => `<li class="flex justify-between items-center bg-zinc-700/50 p-2 rounded-md"><span>${name}</span><span class="font-bold text-orange-400">${count}</span></li>`).join('');
+
+            // Render charts
+            renderStatusChart(todoCount, inprogressCount, doneCount);
+            renderPriorityChart(priorityCounts);
+        };
+
+        const renderStatusChart = (todo, inprogress, done) => {
+            const ctx = document.getElementById('status-chart').getContext('2d');
+            if (statusChart) {
+                statusChart.destroy();
+            }
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['A Fazer', 'Em Progresso', 'Feito'],
+                    datasets: [{
+                        data: [todo, inprogress, done],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'],
+                        borderColor: '#18181b',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#d4d4d8' }
+                        }
+                    }
+                }
+            });
+        };
+
+        const renderPriorityChart = (priorityData) => {
+            const ctx = document.getElementById('priority-chart').getContext('2d');
+            const labels = ['Baixa', 'Média', 'Alta'];
+            const data = labels.map(label => priorityData[label] || 0);
+
+            if (priorityChart) {
+                priorityChart.destroy();
+            }
+            priorityChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Contagem de Eventos',
+                        data: data,
+                        backgroundColor: ['#a1a1aa', '#f59e0b', '#ef4444'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#d4d4d8' }, grid: { color: '#3f3f46' } },
+                        y: { ticks: { color: '#d4d4d8' }, grid: { color: '#3f3f46' } }
+                    }
+                }
+            });
+        };
+
+        const renderReport = () => {
+            if (!allEvents) return;
+
+            const doneEvents = allEvents.filter(e => e.status === 'done');
+            const totalCount = allEvents.length;
+            const doneCount = doneEvents.length;
+            const percentage = totalCount > 0 ? (doneCount / totalCount) * 100 : 0;
+
+            reportTotal.textContent = totalCount;
+            reportDone.textContent = doneCount;
+
+            completedEventsList.innerHTML = doneEvents.length > 0 ? doneEvents.map(event => `
+                <div class="bg-zinc-800 print-bg-white p-3 rounded-lg flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold print-text-black">${event.name}</p>
+                        <p class="text-sm text-zinc-400 print-text-black"><b>Seção:</b> ${event.section || 'N/A'} | <b>Responsável:</b> ${event.owner || 'N/A'}</p>
+                    </div>
+                    <i data-lucide="check-circle-2" class="w-6 h-6 text-green-500"></i>
+                </div>
+            `).join('') : '<p class="text-zinc-400 text-center">Nenhum evento concluído ainda.</p>';
+            
+            lucide.createIcons();
+
+            const ctx = document.getElementById('completion-chart').getContext('2d');
+            if(completionChart) completionChart.destroy();
+            completionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Concluído', 'Restante'],
+                    datasets: [{
+                        data: [doneCount, totalCount - doneCount],
+                        backgroundColor: ['#22c55e', '#52525b'],
+                        borderColor: '#18181b',
+                        borderWidth: 4,
+                        circumference: 180,
+                        rotation: -90,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    cutout: '70%',
+                }
+            });
+        };
+
+        printReportBtn.addEventListener('click', () => {
+            window.print();
+        });
 
 
         // --- Initial Load ---
