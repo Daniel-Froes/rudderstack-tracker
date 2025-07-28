@@ -197,7 +197,7 @@
         <div id="views-container">
             <!-- Dashboard View -->
             <div id="dashboard-view" class="view hidden">
-                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                     <div class="bg-zinc-800 p-6 rounded-xl flex items-center gap-4">
                         <i data-lucide="list-checks" class="w-10 h-10 text-orange-400"></i>
                         <div>
@@ -273,7 +273,7 @@
                 </div>
 
                 <!-- Event Lists -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     <div>
                         <h2 class="text-2xl font-bold mb-4 text-center text-red-500 flex items-center justify-center gap-2"><i data-lucide="list" class="inline-block"></i>A Fazer</h2>
                         <div id="todo-list" data-status="todo" class="column bg-zinc-900/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
@@ -365,7 +365,7 @@
                     </div>
 
                     <div id="report-content" class="print-bg-white print-text-black p-8 rounded-lg">
-                        <h3 class="text-2xl font-bold mb-6 print-text-black">Resumo de Eventos Concluídos</h3>
+                        <h3 class="text-2xl font-bold mb-6 print-text-black">Resumo de Eventos</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                             <div class="text-center">
                                 <canvas id="completion-chart" width="150" height="150"></canvas>
@@ -382,10 +382,22 @@
                             </div>
                         </div>
                         
-                        <div>
-                            <h4 class="text-xl font-semibold mb-4 print-text-black">Lista de Eventos Concluídos</h4>
-                            <div id="completed-events-list" class="space-y-3">
-                                <!-- Completed events will be listed here -->
+                        <div class="space-y-6">
+                             <div>
+                                <h4 class="text-xl font-semibold mb-4 print-text-black border-b border-zinc-700 pb-2">Eventos Concluídos</h4>
+                                <div id="completed-events-list" class="space-y-3"></div>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-semibold mb-4 print-text-black border-b border-zinc-700 pb-2">Eventos em Progresso</h4>
+                                <div id="inprogress-events-list-report" class="space-y-3"></div>
+                            </div>
+                             <div>
+                                <h4 class="text-xl font-semibold mb-4 print-text-black border-b border-zinc-700 pb-2">Eventos com Impedimento</h4>
+                                <div id="impediment-events-list-report" class="space-y-3"></div>
+                            </div>
+                             <div>
+                                <h4 class="text-xl font-semibold mb-4 print-text-black border-b border-zinc-700 pb-2">Eventos a Fazer</h4>
+                                <div id="todo-events-list-report" class="space-y-3"></div>
                             </div>
                         </div>
                     </div>
@@ -701,6 +713,9 @@ window.trackProductViewed = trackProductViewed;
         const reportTotal = document.getElementById('report-total');
         const reportDone = document.getElementById('report-done');
         const completedEventsList = document.getElementById('completed-events-list');
+        const inprogressEventsListReport = document.getElementById('inprogress-events-list-report');
+        const impedimentEventsListReport = document.getElementById('impediment-events-list-report');
+        const todoEventsListReport = document.getElementById('todo-events-list-report');
 
 
         // --- App State ---
