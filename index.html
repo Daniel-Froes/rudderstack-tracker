@@ -197,7 +197,7 @@
         <div id="views-container">
             <!-- Dashboard View -->
             <div id="dashboard-view" class="view hidden">
-                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                     <div class="bg-zinc-800 p-6 rounded-xl flex items-center gap-4">
                         <i data-lucide="list-checks" class="w-10 h-10 text-orange-400"></i>
                         <div>
@@ -217,6 +217,13 @@
                         <div>
                             <p class="text-sm text-zinc-400">Em Progresso</p>
                             <p id="inprogress-events-stat" class="text-3xl font-bold">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-zinc-800 p-6 rounded-xl flex items-center gap-4">
+                        <i data-lucide="alert-octagon" class="w-10 h-10 text-zinc-400"></i>
+                        <div>
+                            <p class="text-sm text-zinc-400">Impedimento</p>
+                            <p id="impediment-events-stat" class="text-3xl font-bold">0</p>
                         </div>
                     </div>
                      <div class="bg-zinc-800 p-6 rounded-xl flex items-center gap-4">
@@ -266,7 +273,7 @@
                 </div>
 
                 <!-- Event Lists -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     <div>
                         <h2 class="text-2xl font-bold mb-4 text-center text-red-500 flex items-center justify-center gap-2"><i data-lucide="list" class="inline-block"></i>A Fazer</h2>
                         <div id="todo-list" data-status="todo" class="column bg-zinc-900/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
@@ -274,6 +281,10 @@
                     <div>
                         <h2 class="text-2xl font-bold mb-4 text-center text-yellow-500 flex items-center justify-center gap-2"><i data-lucide="loader-2" class="inline-block"></i>Em Progresso</h2>
                         <div id="inprogress-list" data-status="inprogress" class="column bg-zinc-900/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold mb-4 text-center text-zinc-400 flex items-center justify-center gap-2"><i data-lucide="alert-octagon" class="inline-block"></i>Impedimento</h2>
+                        <div id="impediment-list" data-status="impediment" class="column bg-zinc-900/50 p-4 rounded-xl shadow-inner min-h-[300px] space-y-4"></div>
                     </div>
                     <div>
                         <h2 class="text-2xl font-bold mb-4 text-center text-green-500 flex items-center justify-center gap-2"><i data-lucide="check-circle-2" class="inline-block"></i>Feito</h2>
@@ -608,6 +619,7 @@ window.trackProductViewed = trackProductViewed;
         const appIdDisplay = document.getElementById('appIdDisplay');
         const todoList = document.getElementById('todo-list');
         const inprogressList = document.getElementById('inprogress-list');
+        const impedimentList = document.getElementById('impediment-list');
         const doneList = document.getElementById('done-list');
         const progressBar = document.getElementById('progressBar');
         const progressLabel = document.getElementById('progressLabel');
@@ -678,6 +690,7 @@ window.trackProductViewed = trackProductViewed;
         const totalEventsStat = document.getElementById('total-events-stat');
         const todoEventsStat = document.getElementById('todo-events-stat');
         const inprogressEventsStat = document.getElementById('inprogress-events-stat');
+        const impedimentEventsStat = document.getElementById('impediment-events-stat');
         const doneEventsStat = document.getElementById('done-events-stat');
         const ownerSummaryList = document.getElementById('owner-summary-list');
         const sectionSummaryList = document.getElementById('section-summary-list');
@@ -750,6 +763,7 @@ window.trackProductViewed = trackProductViewed;
             updateDynamicFilters();
             todoList.innerHTML = '';
             inprogressList.innerHTML = '';
+            impedimentList.innerHTML = '';
             doneList.innerHTML = '';
             let filteredEvents = allEvents.filter(event => {
                 const searchMatch = event.name.toLowerCase().includes(searchInput.value.toLowerCase());
@@ -769,10 +783,12 @@ window.trackProductViewed = trackProductViewed;
                  const emptyMessage = `<p class="text-gray-500 dark:text-gray-400 text-center p-4">Nenhum evento corresponde aos filtros atuais.</p>`;
                  todoList.innerHTML = emptyMessage;
                  inprogressList.innerHTML = emptyMessage;
+                 impedimentList.innerHTML = emptyMessage;
                  doneList.innerHTML = emptyMessage;
             } else if (allEvents.length === 0) {
                  todoList.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center p-4">Nenhum evento a fazer. Adicione um!</p>`;
                  inprogressList.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center p-4">Nenhum evento em progresso.</p>`;
+                 impedimentList.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center p-4">Nenhum evento com impedimento.</p>`;
                  doneList.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center p-4">Nenhum evento concluído.</p>`;
             }
 
@@ -782,6 +798,8 @@ window.trackProductViewed = trackProductViewed;
                     inprogressList.appendChild(eventCard);
                 } else if (event.status === 'done') {
                     doneList.appendChild(eventCard);
+                } else if (event.status === 'impediment') {
+                    impedimentList.appendChild(eventCard);
                 } else { // 'todo' or undefined
                     todoList.appendChild(eventCard);
                 }
@@ -864,11 +882,15 @@ window.trackProductViewed = trackProductViewed;
                 case 'inprogress':
                     actionButtons = `
                         <button title="Mover para A Fazer" class="action-btn text-gray-400 hover:text-red-500" data-action="todo"><i data-lucide="undo-2" class="w-5 h-5"></i></button>
+                        <button title="Marcar Impedimento" class="action-btn text-gray-400 hover:text-zinc-300" data-action="impediment"><i data-lucide="alert-octagon" class="w-5 h-5"></i></button>
                         <button title="Concluir" class="action-btn text-gray-400 hover:text-green-500" data-action="done"><i data-lucide="check-circle-2" class="w-5 h-5"></i></button>
                     `;
                     break;
                 case 'done':
                     actionButtons = `<button title="Mover para Em Progresso" class="action-btn text-gray-400 hover:text-yellow-500" data-action="inprogress"><i data-lucide="loader-2" class="w-5 h-5"></i></button>`;
+                    break;
+                case 'impediment':
+                     actionButtons = `<button title="Remover Impedimento" class="action-btn text-gray-400 hover:text-yellow-500" data-action="inprogress"><i data-lucide="play-circle" class="w-5 h-5"></i></button>`;
                     break;
                 case 'todo':
                 default:
@@ -964,6 +986,7 @@ window.trackProductViewed = trackProductViewed;
             const statusMap = {
                 todo: 'A Fazer',
                 inprogress: 'Em Progresso',
+                impediment: 'Impedimento',
                 done: 'Feito'
             };
             const comment = {
@@ -1458,6 +1481,7 @@ window.${functionName} = ${functionName};
             const statusMap = {
                 todo: { text: 'A Fazer', color: 'bg-red-500' },
                 inprogress: { text: 'Em Progresso', color: 'bg-yellow-500' },
+                impediment: { text: 'Impedimento', color: 'bg-zinc-500'},
                 done: { text: 'Feito', color: 'bg-green-500' }
             };
 
@@ -1567,11 +1591,13 @@ window.${functionName} = ${functionName};
 
             const todoCount = allEvents.filter(e => (e.status || 'todo') === 'todo').length;
             const inprogressCount = allEvents.filter(e => e.status === 'inprogress').length;
+            const impedimentCount = allEvents.filter(e => e.status === 'impediment').length;
             const doneCount = allEvents.filter(e => e.status === 'done').length;
 
             totalEventsStat.textContent = allEvents.length;
             todoEventsStat.textContent = todoCount;
             inprogressEventsStat.textContent = inprogressCount;
+            impedimentEventsStat.textContent = impedimentCount;
             doneEventsStat.textContent = doneCount;
 
             // Group data
@@ -1598,11 +1624,11 @@ window.${functionName} = ${functionName};
             sectionSummaryList.innerHTML = Object.entries(sectionCounts).map(([name, count]) => `<li class="flex justify-between items-center bg-zinc-700/50 p-2 rounded-md"><span>${name}</span><span class="font-bold text-orange-400">${count}</span></li>`).join('');
 
             // Render charts
-            renderStatusChart(todoCount, inprogressCount, doneCount);
+            renderStatusChart(todoCount, inprogressCount, doneCount, impedimentCount);
             renderPriorityChart(priorityCounts);
         };
 
-        const renderStatusChart = (todo, inprogress, done) => {
+        const renderStatusChart = (todo, inprogress, done, impediment) => {
             const ctx = document.getElementById('status-chart').getContext('2d');
             if (statusChart) {
                 statusChart.destroy();
@@ -1610,10 +1636,10 @@ window.${functionName} = ${functionName};
             statusChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['A Fazer', 'Em Progresso', 'Feito'],
+                    labels: ['A Fazer', 'Em Progresso', 'Feito', 'Impedimento'],
                     datasets: [{
-                        data: [todo, inprogress, done],
-                        backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'],
+                        data: [todo, inprogress, done, impediment],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#22c55e', '#a1a1aa'],
                         borderColor: '#18181b',
                         borderWidth: 4
                     }]
