@@ -341,11 +341,16 @@
             <!-- Report View -->
             <div id="report-view" class="view hidden">
                 <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-xl shadow-sm max-w-4xl mx-auto">
-                    <div class="flex justify-between items-center mb-6">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
                         <h2 class="text-3xl font-bold text-orange-500">Relatório de Implementação</h2>
-                        <button id="printReportBtn" class="bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2">
-                            <i data-lucide="printer" class="w-5 h-5"></i> Imprimir / Salvar PDF
-                        </button>
+                        <div class="flex gap-2">
+                            <button id="copyMarkdownBtn" class="bg-zinc-700 text-white font-semibold px-4 py-2 rounded-lg hover:bg-zinc-600 transition-colors flex items-center gap-2">
+                                <i data-lucide="clipboard" class="w-5 h-5"></i> Copiar Markdown
+                            </button>
+                            <button id="printReportBtn" class="bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2">
+                                <i data-lucide="printer" class="w-5 h-5"></i> Imprimir / Salvar PDF
+                            </button>
+                        </div>
                     </div>
 
                     <div id="report-content" class="print-bg-white print-text-black p-8 rounded-lg">
@@ -679,6 +684,7 @@ window.trackProductViewed = trackProductViewed;
         // Report Elements
         const reportView = document.getElementById('report-view');
         const printReportBtn = document.getElementById('printReportBtn');
+        const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
         const reportTotal = document.getElementById('report-total');
         const reportDone = document.getElementById('report-done');
         const completedEventsList = document.getElementById('completed-events-list');
@@ -1708,6 +1714,29 @@ window.${functionName} = ${functionName};
 
         printReportBtn.addEventListener('click', () => {
             window.print();
+        });
+
+        copyMarkdownBtn.addEventListener('click', () => {
+            const doneEvents = allEvents.filter(e => e.status === 'done');
+            const totalCount = allEvents.length;
+            const doneCount = doneEvents.length;
+            const percentage = totalCount > 0 ? (doneCount / totalCount).toFixed(2) * 100 : 0;
+
+            let markdown = `# Relatório de Implementação de Eventos\n\n`;
+            markdown += `**Progresso Geral:** ${doneCount} de ${totalCount} eventos concluídos (${percentage}%).\n\n`;
+            markdown += `## Eventos Concluídos\n\n`;
+
+            if (doneEvents.length > 0) {
+                doneEvents.forEach(event => {
+                    markdown += `- **${event.name}**\n`;
+                    markdown += `  - **Seção:** ${event.section || 'N/A'}\n`;
+                    markdown += `  - **Responsável:** ${event.owner || 'N/A'}\n\n`;
+                });
+            } else {
+                markdown += `Nenhum evento concluído ainda.\n`;
+            }
+
+            copyToClipboard(markdown, 'Relatório em Markdown copiado!');
         });
 
 
